@@ -1,0 +1,5 @@
+	gcc -o <app name> <file name C> -Wall `pkg-config --cflags --libs gtk+-3.0` -export-dynamic
+
+
+	gcc client.c `pkg-config --cflags --libs glib-2.0` -o client
+	gcc server.c `pkg-config --cflags --libs glib-2.0` -o server
