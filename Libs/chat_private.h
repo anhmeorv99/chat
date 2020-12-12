@@ -1,6 +1,7 @@
 #include <gtk/gtk.h>
 #include <string.h>
 #include <stdlib.h>
+#include <pthread.h>
 
 typedef struct {
 	GtkTextBuffer *text_buffer_view;
@@ -12,18 +13,51 @@ typedef struct {
 	//GtkLayout *layout;
 	GtkWidget *grid;
     GtkWidget *button[100];
-    
+
+    Object *object_chat ;
+    int sock_chat_private;
 }app_widgets;
-
 int row;
+//test
+int recv_chat;
+app_widgets        *widgets;
+volatile sig_atomic_t flag = 0;
 
+void set_obj_chat_private(char *from_username, int sockfd){
+    widgets = g_slice_new(app_widgets);
+    widgets->object_chat = new_chat_private_object();
+    strcpy(widgets->object_chat->chat_private.from_username,from_username);
+    widgets->sock_chat_private = sockfd;
+    //object->chat_private->to_username
+}
+
+void recv_to_friend(void *app){
+    //test
+    char message_recv[200];
+    app_widgets *widg = (app_widgets*)app;
+    while(1){
+        recv_chat = recv(widg->sock_chat_private,message_recv,sizeof(message_recv),0);
+        message_recv[recv_chat] = '\0';
+        if(gtk_text_buffer_get_char_count(gtk_text_view_get_buffer(widg->txtvw_show)) != 0){
+            gtk_text_buffer_insert_at_cursor(widg->text_buffer_view,"\n",-1);
+        }
+        gtk_text_buffer_insert_at_cursor(widg->text_buffer_view,message_recv,-1);
+
+        if(recv_chat < 0 ) break;
+    }
+    
+    //
+    
+}
+
+//
 void on_row(GtkButton *b);
 int chat_private(int argc, char **argv)
 {
     GtkBuilder      *builder_chat; 
     GtkWidget       *window_chat;
 
-    app_widgets        *widgets = g_slice_new(app_widgets);
+  
 
     gtk_init(&argc, &argv);
 
@@ -40,30 +74,28 @@ int chat_private(int argc, char **argv)
     //widgets->layout = GTK_LAYOUT(gtk_builder_get_object(builder,"layout"));
     /////////////
     row =0;
-    while(row != 5){
-        int stt = row + 1;
-        char str_stt[10];
-        sprintf(str_stt,"%d",stt);
-        char label[] = "friend ";
-        strcat(label,str_stt);
-        
-        widgets->button[row] = gtk_button_new_with_label(label);
-   
-        gtk_grid_insert_row(GTK_GRID(widgets->grid),row);
-        gtk_grid_attach(GTK_GRID(widgets->grid),widgets->button[row],1,row,1,1);
-        g_signal_connect(widgets->button[row],"clicked",G_CALLBACK(on_row),NULL);
-        row++;
-    }
+    //test
+    pthread_t id;
+    if(pthread_create(&id,NULL, (void *)recv_to_friend,(void *)widgets) != 0){
+        perror("Create pthread error!\n");
+        exit(EXIT_FAILURE);
+    } 
+    
+    // 
     //////////
     gtk_builder_connect_signals(builder_chat, widgets);
+   
     g_object_unref(builder_chat);
     
     // start 1 second timer
     
 
-    gtk_widget_show(window_chat);     
-    //gtk_widget_set_visible(widgets->scrol_list_friend,FALSE);           
+    gtk_widget_show(window_chat);    
+
+    //gtk_widget_set_visible(widgets->scrol_list_friend,FALSE);   
+           
     gtk_main();
+
     g_slice_free(app_widgets, widgets);
 
     return 0;
@@ -76,20 +108,29 @@ void on_window_chat_destroy()
 }
 
 void on_chat_send_clicked(GtkButton *button, app_widgets *widg){
-	GtkTextIter start, end;
-   
-	gtk_text_buffer_get_start_iter(gtk_text_view_get_buffer(widg->text_write),&start);
-	gtk_text_buffer_get_end_iter(gtk_text_view_get_buffer(widg->text_write),&end);
+    GtkTextIter start, end;
 
+    gtk_text_buffer_get_start_iter(gtk_text_view_get_buffer(widg->text_write),&start);
+    gtk_text_buffer_get_end_iter(gtk_text_view_get_buffer(widg->text_write),&end);
+    
     if(gtk_text_buffer_get_char_count(gtk_text_view_get_buffer(widg->txtvw_show)) != 0){
         gtk_text_buffer_insert_at_cursor(widg->text_buffer_view,"\n",-1);
     }
-	//gtk_text_view_set_buffer(widg->text_view2,gtk_text_view_get_buffer(widg->text_view1));
-	gtk_text_buffer_insert_at_cursor(widg->text_buffer_view,gtk_text_buffer_get_text(
+    //test
+    printf("sock - %d",widg->sock_chat_private);
+ 
+    strcpy(widg->object_chat->chat_private.message,gtk_text_buffer_get_text(
+        gtk_text_view_get_buffer(widg->text_write),&start,&end,FALSE));
+    if(send(widg->sock_chat_private,widg->object_chat,sizeof(Object),0) < 0){
+        perror("send - chat private");
+        return;
+    }
+    //
+    //gtk_text_view_set_buffer(widg->text_view2,gtk_text_view_get_buffer(widg->text_view1));
+    gtk_text_buffer_insert_at_cursor(widg->text_buffer_view,gtk_text_buffer_get_text(
         gtk_text_view_get_buffer(widg->text_write),&start,&end,FALSE),-1);
-	gtk_text_view_set_buffer(widg->text_write,gtk_text_buffer_new(NULL));
+    gtk_text_view_set_buffer(widg->text_write,gtk_text_buffer_new(NULL));
     //test client - server
-    
 }
 
 void on_togbtn_list_friend_toggled(GtkToggleButton *togglebutton, app_widgets * widg){

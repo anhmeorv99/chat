@@ -24,8 +24,8 @@ OBJS=   application.o
 OBJS_PATH = Control/client.c
 OBJ_SERVER = server.o
 OBJ_SERVER_PATH = Control/server.c
-OBJ_DATA = object.o
-OBJ_DATA_PATH = symtab/object.c
+OBJ_DATA = object_data.o
+OBJ_DATA_PATH = symtab/object_data.c
 OBJ_ERROR_INVALID = error_invalid.o
 OBJ_ERROR_INVALID_PATH = symtab/error_invalid.c
 
@@ -48,4 +48,4 @@ $(OBJ_ERROR_INVALID): $(OBJ_ERROR_INVALID_PATH)
 	$(CC) -c $(CCFLAGS) $(OBJ_ERROR_INVALID_PATH)
 
 clean:
-	rm -f *.o $(TARGET)
+	rm -f *.o $(TARGET) server

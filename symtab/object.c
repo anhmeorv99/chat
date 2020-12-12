@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "object.h"
-#define NUM_OF_SIGNAL 3
+#define NUM_OF_SIGNAL 4
 //-------------------------SIGNAL-------------------
 struct Signal_Message_{
 	Signals signal;
@@ -11,7 +11,8 @@ struct Signal_Message_{
 struct Signal_Message_ signal_message[NUM_OF_SIGNAL] = {
 	{SIGNAL_NONE, "SIGNAL_NONE"},
 	{SIGNAL_LOGIN, "SIGNAL_LOGIN"},
-	{SIGNAL_SIGNUP, "SIGNAL_SIGNUP"}
+	{SIGNAL_SIGNUP, "SIGNAL_SIGNUP"},
+	{SIGNAL_CHAT_PRIVATE, "SIGNAL_CHAT_PRIVATE"}
 };
 //convect Signal: enum -> char*
 void convect_signal_to_message(Signals signal,char *message){

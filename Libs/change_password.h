@@ -1,6 +1,6 @@
 
 #include <gtk/gtk.h>
-#include "../symtab/object.h"
+#include "../symtab/object_data.h"
 #include "../symtab/error_invalid.h"
 
 GtkWidget       *window_change_pass;
@@ -38,7 +38,7 @@ int change_password(int argc, char **argv)
     change_pass_account = GTK_WIDGET(gtk_builder_get_object(builder_change_pass,"change_pass_account"));
     //----
     //gtk_window_set_decorated(GTK_WINDOW(window_menu),FALSE);
-    gtk_entry_set_text(GTK_ENTRY(change_pass_account),obj_login->login->account);
+    gtk_entry_set_text(GTK_ENTRY(change_pass_account),obj_login->login.username);
     //---
     g_object_unref(builder_change_pass);
 

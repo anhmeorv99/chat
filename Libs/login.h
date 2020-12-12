@@ -4,15 +4,13 @@
 
 typedef struct{
     GtkWidget *account;
-    GtkWidget *password;
-    Object *object;
+    GtkWidget *password;   
     int argc;
     char *argv;
     int sockfd;
 }login_form;
 
 GtkWidget       *window_login;
-
 
 gboolean getCheckLogin(){
     return getCheckMenu();
@@ -63,33 +61,22 @@ void on_login_ui_destroy()
 }
 
 void on_login_btn_login_clicked(GtkButton *button, login_form *login_in){
-    char message[100], buff[100];
-    int recvBytes;
-    login_in->object = new_login_object();
+    Object *object = new_login_object();
+    g_stpcpy(object->login.username,g_strdup(gtk_entry_get_text(GTK_ENTRY(login_in->account))));
+    g_stpcpy(object->login.password , g_strdup(gtk_entry_get_text(GTK_ENTRY(login_in->password))));
+    dup_obj_login(object);
+    //test
+    set_obj_chat_private(object->login.username, login_in->sockfd);
+    //
+    g_print("Account: %s\n",object->login.username);
+    g_print("Password: %s\n",object->login.password);
 
-    g_stpcpy(login_in->object->login->account,g_strdup(gtk_entry_get_text(GTK_ENTRY(login_in->account))));
-    g_stpcpy(login_in->object->login->password , g_strdup(gtk_entry_get_text(GTK_ENTRY(login_in->password))));
-    dup_obj_login(login_in->object);
-    g_print("Account: %s\n",login_in->object->login->account);
-    g_print("Password: %s\n",login_in->object->login->password);
-    convect_signal_to_message(login_in->object->signals,message);
-    g_print("%s\n",message);
-    if(send(login_in->sockfd,message,strlen(message),0) < 0){
+    if(send(login_in->sockfd,object,sizeof(Object),0) < 0){
         perror("send - login");
         return;
     }
-    if((recvBytes = recv(login_in->sockfd,buff,sizeof(buff),0)) < 0){
-        perror("recv - login");
-        return;
-    }
-    buff[recvBytes] = '\0';
-    printf("buff: %s\n",buff);
-    if(send(login_in->sockfd,login_in->object->login,sizeof(Login),0) < 0){
-        perror("send- login");
-        return;
-    }
     
-    free_object(login_in->object);
+    free_object(object);
     //cach 1:
     setCheckLogin();
     gtk_window_close(GTK_WINDOW(window_login));

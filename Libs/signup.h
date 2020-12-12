@@ -7,7 +7,6 @@ typedef struct{
     GtkWidget *password;
     GtkWidget *re_password;
     GtkWidget *lbl_err_account;
-    Object *obj;
     int sockfd;
 }signup_form;
 gboolean check_signup = FALSE;
@@ -88,22 +87,22 @@ void on_signup_ui_destroy()
 }
 
 void on_signup_btn_signup_clicked(GtkButton *button, signup_form *signup_in){
-    char message[100],buff[100];
-    int recvBytes;
+    
+   
+    Object *obj = new_signup_object();
     Error error;
     const char *format_error = "<span foreground='red'>%s</span>" ;
     //const char *format_invalid = "<span foreground='green' weight='bold' font='13'>%s</span>";
     char *markup_message;
-    signup_in->obj = new_signup_object();
-    g_stpcpy(signup_in->obj->signup->name , g_strdup(gtk_entry_get_text(GTK_ENTRY(signup_in->name))));
-    g_stpcpy(signup_in->obj->signup->account , g_strdup(gtk_entry_get_text(GTK_ENTRY(signup_in->account))));
-    g_stpcpy(signup_in->obj->signup->password , g_strdup(gtk_entry_get_text(GTK_ENTRY(signup_in->password))));
-    g_stpcpy(signup_in->obj->signup->re_password , g_strdup(gtk_entry_get_text(GTK_ENTRY(signup_in->re_password))));
-    g_print("Name: %s\n",signup_in->obj->signup->name);
-    g_print("Account: %s\n",signup_in->obj->signup->account);
-    g_print("Password: %s\n",signup_in->obj->signup->password);
-    g_print("Confirm Password: %s\n",signup_in->obj->signup->re_password);
-    error = check_account(signup_in->obj->signup->account);
+    g_stpcpy(obj->signup.name , g_strdup(gtk_entry_get_text(GTK_ENTRY(signup_in->name))));
+    g_stpcpy(obj->signup.username , g_strdup(gtk_entry_get_text(GTK_ENTRY(signup_in->account))));
+    g_stpcpy(obj->signup.password , g_strdup(gtk_entry_get_text(GTK_ENTRY(signup_in->password))));
+    g_stpcpy(obj->signup.re_password , g_strdup(gtk_entry_get_text(GTK_ENTRY(signup_in->re_password))));
+    g_print("Name: %s\n",obj->signup.name);
+    g_print("Account: %s\n",obj->signup.username);
+    g_print("Password: %s\n",obj->signup.password);
+    g_print("Confirm Password: %s\n",obj->signup.re_password);
+    error = check_account(obj->signup.username);
     if(error == ERR_ACCOUNT){
         char message[100];
         error_to_string(error,message);
@@ -119,26 +118,13 @@ void on_signup_btn_signup_clicked(GtkButton *button, signup_form *signup_in){
         g_free(markup_message);
         
     }else{
-        convect_signal_to_message(signup_in->obj->signals,message);
-        g_print("%s\n",message);
-        if(send(signup_in->sockfd,message,strlen(message),0) < 0){
-            perror("send - login");
-            return;
-        }
-        if((recvBytes = recv(signup_in->sockfd,buff,sizeof(buff),0)) < 0){
-            perror("recv - login");
-            return;
-        }
-        buff[recvBytes] = '\0';
-        printf("buff: %s\n",buff);
-        if(send(signup_in->sockfd,signup_in->obj->signup,sizeof(Signup),0) < 0){
+ 
+        if(send(signup_in->sockfd,obj,sizeof(Object),0) < 0){
             perror("send- login");
             return;
         }
-        
-        free_object(signup_in->obj);
     }
-    
+    free_object(obj);
 
 }
 
