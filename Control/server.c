@@ -20,6 +20,37 @@ typedef struct Node_ {
     Elementtype element;  
     struct Node_ *next;
 }Node;
+typedef struct User_ {
+    Signup signup;
+    struct User_ *next;
+}User;
+User *new_user(Signup signup){
+    User *new = (User*)malloc(sizeof(User));
+    new->signup = signup;
+    new->next = NULL;
+    return new;
+}
+User *insert_user_at_end(User *user, Signup signup){
+    User *new = new_user(signup);
+    if(user == NULL)
+        return new;
+    User *cur = user;
+    while(cur->next != NULL)
+        cur = cur->next;
+    cur->next = new;
+    return user;
+}
+
+void print_user(User *user){
+    User *cur = user;
+    while(cur != NULL){
+        printf("Name: %s\n",cur->signup.name);
+                            printf("Account: %s\n",cur->signup.username);
+                            printf("Password: %s\n",cur->signup.password);
+                            printf("Confirm Password: %s\n\n",cur->signup.re_password);
+                            cur = cur->next;
+    }
+}
 
 Node *new_node(Elementtype e){
     Node *new = (Node*)malloc(sizeof(Node));
@@ -67,6 +98,7 @@ int main(int argc, char **argv){
     int client[QUEUE_MAX];
     //test
     Node *root = NULL;
+    User *user = NULL;
     //
     if(argc != 2){
         printf("Error: sai cu phap\n");
@@ -122,26 +154,20 @@ int main(int argc, char **argv){
             sleep(3);
         }else{
             if(FD_ISSET(sockfd,&readfds)){
-                int index_clie;
-               
+                int index_clie;             
                 len_clie = sizeof(clieaddr);
                 if((connfd = accept(sockfd,(struct sockaddr*)&clieaddr,&len_clie)) < 0){
                     perror("Error: accept! ");
                     return 0;
                 }
-                //test
                 Elementtype *element = (Elementtype*)malloc(sizeof(Elementtype));
                 element->sockfd = connfd;
                 printf("sock %d\n",element->sockfd);
                 root = insert_at_end(root,*element);
                 printList(root);
                 printf("\n");
-                //
-
-                printf("New connect with client %d\n",connfd);
-               
+                printf("New connect with client %d\n",connfd);              
                 index_clie = connfd - sockfd - 1;
-
                 if(index_clie == QUEUE_MAX){
                     printf("Server day!\n");   
                 }else{
@@ -156,14 +182,11 @@ int main(int argc, char **argv){
                 if(index_clie > maxi) 
                         maxi = index_clie;
             }
-
             for(i = 0; i<= maxi;i++){
                 int sock_cl;
                 if((sock_cl = client[i]) < 0) continue;
-                if(FD_ISSET(sock_cl,&readfds)){
-                    
-                    Object *obj = (Object*)malloc(sizeof(Object));
-                    
+                if(FD_ISSET(sock_cl,&readfds)){                  
+                    Object *obj = (Object*)malloc(sizeof(Object));                   
                     if((recvBytes = recv(sock_cl,obj,sizeof(Object),0)) < 0){
                         printf("ERROR! In socket %d\n",sock_cl);
                         perror("recv - message");
@@ -171,13 +194,10 @@ int main(int argc, char **argv){
                         FD_CLR(sock_cl,&masterfds);
                         close(sock_cl);
                         continue;
-                    }
-                    
+                    }                 
                     switch(obj->signal){
                         case SIGNAL_LOGIN:
-
                             printf("------------LOGIN-------------\n");
-                            //test
                             {
                                 Node *cur_login = root;
                                 while(cur_login != NULL){
@@ -188,27 +208,95 @@ int main(int argc, char **argv){
                                     cur_login = cur_login->next;
                                 }
                             }
-                            //
                             printf("Account: %s\n",obj->login.username);
-                            printf("Password: %s\n\n",obj->login.password);
-                            //obj->signals = SIGNAL_NONE;
+                            printf("Password: %s\n\n",obj->login.password);  
+                            //check loi
+                            {
+                                User *cur_user = user;
+                                bool check_login = false;
+                                Error err_login;
+                                char msg_err_login[100];
+                                while(cur_user != NULL){
+                                    if(strcmp(cur_user->signup.username,obj->login.username) == 0){
+                                        check_login = true;
+                                        break;
+                                    }
+                                    cur_user = cur_user->next;
+                                }
+                                if(check_login == true){
+                                    if(strcmp(cur_user->signup.password, obj->login.password) != 0){ // sai pass
+                                        err_login = ERR_CAN_NOT_PASSWORD;
+                                    }else{ //dang nhap thanh cong
+                                        err_login = ERR_NONE;
+                                    }
+                                }else{ //sai username
+                                    err_login = ERR_NOT_USERNAME;
+                                }
+                                error_to_string(err_login,msg_err_login);
+                                if(send(sock_cl,msg_err_login,strlen(msg_err_login),0) < 0){
+                                    printf("ERROR! In socket %d\n",sock_cl);
+                                    perror("send - msg_err login");
+                                    client[i] = -1;
+                                    FD_CLR(sock_cl,&masterfds);
+                                    close(sock_cl);
+                                    continue;
+                                }
+                            }                        
                             break;
-                        case SIGNAL_SIGNUP:
-                            
+                        case SIGNAL_SIGNUP:                          
                             printf("------------SIGNUP-----------\n");
                             printf("Name: %s\n",obj->signup.name);
                             printf("Account: %s\n",obj->signup.username);
                             printf("Password: %s\n",obj->signup.password);
                             printf("Confirm Password: %s\n\n",obj->signup.re_password);
+                            Signup sign;
+                            Error err = ERR_NONE;
+                            char msg_err[100];
+                            strcpy(sign.name,obj->signup.name);
+                            strcpy(sign.username,obj->signup.username);
+                            strcpy(sign.password,obj->signup.password);
+                            strcpy(sign.re_password, obj->signup.re_password);
+                            if(user == NULL)
+                                user = insert_user_at_end(user,sign);
+                            else{
+                                User *cur_user = user;
+                                bool check = false;
+                                while(cur_user != NULL){
+                                    if(strcmp(sign.username,cur_user->signup.username) == 0){
+                                        check = true;
+                                        break;
+                                    }
+                                    cur_user = cur_user->next;
+                                }
+                                if(check == true){
+                                    err = ERR_HAS_USERNAME;
+                                }else{
+                                    user = insert_user_at_end(user,sign);
+                                }
+                            }
+                            error_to_string(err,msg_err);
+                            if(send(sock_cl,msg_err,strlen(msg_err),0) < 0){
+                                printf("ERROR! In socket %d\n",sock_cl);
+                                perror("send - err");
+                                client[i] = -1;
+                                FD_CLR(sock_cl,&masterfds);
+                                close(sock_cl);
+                                continue;
+                            }
+                            print_user(user);
                             //obj->signals = SIGNAL_NONE;
                             break;
                         case SIGNAL_CHAT_PRIVATE:
                             
                             printf("%s : %s\n",obj->chat_private.from_username,obj->chat_private.message);
                             Node *cur_chat = root;
+                            
                             while(cur_chat != NULL){
                                 if(strcmp(cur_chat->element.username,obj->chat_private.from_username) != 0){
-                                    if(send(cur_chat->element.sockfd, obj->chat_private.message, strlen(obj->chat_private.message),0)<0){
+                                    char message_[250];
+                                    sprintf(message_,"[%s]:\n%s",obj->chat_private.from_username,obj->chat_private.message);
+                                    if(send(cur_chat->element.sockfd,message_, 
+                                        strlen(message_),0)<0){
                                         printf("ERROR! In socket %d\n",sock_cl);
                                         perror("recv - message");
                                         client[i] = -1;

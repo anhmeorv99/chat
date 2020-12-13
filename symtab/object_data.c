@@ -2,6 +2,7 @@
 #include "object_data.h"
 
 
+
 //cap phat Object void signal la none
 Object *new_object(){
 	Object *obj = (Object*)malloc(sizeof(Object));

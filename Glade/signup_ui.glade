@@ -38,7 +38,17 @@
           </packing>
         </child>
         <child>
-          <placeholder/>
+          <object class="GtkLabel" id="signup_lbl_err_name">
+            <property name="can_focus">False</property>
+            <property name="halign">start</property>
+            <property name="margin_left">100</property>
+            <property name="label" translatable="yes">---</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
+          </packing>
         </child>
         <child>
           <object class="GtkBox">
@@ -82,15 +92,7 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkLabel" id="signup_lbl_err_name">
-                    <property name="can_focus">False</property>
-                    <property name="label" translatable="yes">---</property>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="fill">True</property>
-                    <property name="position">1</property>
-                  </packing>
+                  <placeholder/>
                 </child>
               </object>
               <packing>
@@ -107,7 +109,17 @@
           </packing>
         </child>
         <child>
-          <placeholder/>
+          <object class="GtkLabel" id="signup_lbl_err_username">
+            <property name="can_focus">False</property>
+            <property name="halign">start</property>
+            <property name="margin_left">100</property>
+            <property name="label" translatable="yes">----</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">3</property>
+          </packing>
         </child>
         <child>
           <object class="GtkBox">
@@ -121,7 +133,7 @@
                 <property name="can_focus">False</property>
                 <property name="halign">start</property>
                 <property name="valign">start</property>
-                <property name="label" translatable="yes">Account</property>
+                <property name="label" translatable="yes">Username</property>
                 <attributes>
                   <attribute name="weight" value="bold"/>
                 </attributes>
@@ -151,15 +163,7 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkLabel" id="signup_lbl_err_account">
-                    <property name="can_focus">False</property>
-                    <property name="label" translatable="yes">---</property>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="fill">True</property>
-                    <property name="position">1</property>
-                  </packing>
+                  <placeholder/>
                 </child>
               </object>
               <packing>
@@ -176,7 +180,17 @@
           </packing>
         </child>
         <child>
-          <placeholder/>
+          <object class="GtkLabel" id="signup_lbl_err_password">
+            <property name="can_focus">False</property>
+            <property name="halign">start</property>
+            <property name="margin_left">100</property>
+            <property name="label" translatable="yes">---</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">5</property>
+          </packing>
         </child>
         <child>
           <object class="GtkBox">
@@ -218,15 +232,7 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkLabel" id="signup_lbl_err_password">
-                    <property name="can_focus">False</property>
-                    <property name="label" translatable="yes">---</property>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="fill">True</property>
-                    <property name="position">1</property>
-                  </packing>
+                  <placeholder/>
                 </child>
               </object>
               <packing>
@@ -243,7 +249,17 @@
           </packing>
         </child>
         <child>
-          <placeholder/>
+          <object class="GtkLabel" id="signup_lbl_err_re_password">
+            <property name="can_focus">False</property>
+            <property name="halign">start</property>
+            <property name="margin_left">100</property>
+            <property name="label" translatable="yes">---</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">7</property>
+          </packing>
         </child>
         <child>
           <object class="GtkBox">
@@ -288,15 +304,7 @@ Password</property>
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkLabel" id="signup_lbl_err_re_passwrod">
-                    <property name="can_focus">False</property>
-                    <property name="label" translatable="yes">---</property>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="fill">True</property>
-                    <property name="position">1</property>
-                  </packing>
+                  <placeholder/>
                 </child>
               </object>
               <packing>
@@ -313,7 +321,17 @@ Password</property>
           </packing>
         </child>
         <child>
-          <placeholder/>
+          <object class="GtkLabel" id="signup_lbl_invalid_signup">
+            <property name="can_focus">False</property>
+            <property name="halign">start</property>
+            <property name="margin_left">100</property>
+            <property name="label" translatable="yes">---</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">9</property>
+          </packing>
         </child>
         <child>
           <object class="GtkBox">
