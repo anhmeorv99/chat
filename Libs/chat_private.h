@@ -33,7 +33,7 @@ void set_obj_chat_private(char *from_username, int sockfd){
 
 void recv_to_friend(void *app){
     //test
-    char message_recv[200];
+    char message_recv[250];
     app_widgets *widg = (app_widgets*)app;
     while(1){
         recv_chat = recv(widg->sock_chat_private,message_recv,sizeof(message_recv),0);
@@ -127,6 +127,7 @@ void on_chat_send_clicked(GtkButton *button, app_widgets *widg){
     }
     //
     //gtk_text_view_set_buffer(widg->text_view2,gtk_text_view_get_buffer(widg->text_view1));
+    gtk_text_buffer_insert_at_cursor(widg->text_buffer_view,"[YOU]:\n",-1);
     gtk_text_buffer_insert_at_cursor(widg->text_buffer_view,gtk_text_buffer_get_text(
         gtk_text_view_get_buffer(widg->text_write),&start,&end,FALSE),-1);
     gtk_text_view_set_buffer(widg->text_write,gtk_text_buffer_new(NULL));

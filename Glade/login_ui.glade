@@ -37,7 +37,17 @@
           </packing>
         </child>
         <child>
-          <placeholder/>
+          <object class="GtkLabel" id="login_err_username">
+            <property name="can_focus">False</property>
+            <property name="halign">start</property>
+            <property name="margin_left">110</property>
+            <property name="label" translatable="yes">---</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
+          </packing>
         </child>
         <child>
           <object class="GtkBox">
@@ -51,8 +61,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="halign">start</property>
-                <property name="valign">start</property>
-                <property name="label" translatable="yes">Account</property>
+                <property name="label" translatable="yes">Username</property>
                 <attributes>
                   <attribute name="weight" value="bold"/>
                 </attributes>
@@ -97,7 +106,17 @@
           </packing>
         </child>
         <child>
-          <placeholder/>
+          <object class="GtkLabel" id="login_err_password">
+            <property name="can_focus">False</property>
+            <property name="halign">start</property>
+            <property name="margin_left">110</property>
+            <property name="label" translatable="yes">---</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">3</property>
+          </packing>
         </child>
         <child>
           <object class="GtkBox">
@@ -157,7 +176,17 @@
           </packing>
         </child>
         <child>
-          <placeholder/>
+          <object class="GtkLabel" id="login_invalid_login">
+            <property name="can_focus">False</property>
+            <property name="halign">start</property>
+            <property name="margin_left">110</property>
+            <property name="label" translatable="yes">---</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">5</property>
+          </packing>
         </child>
         <child>
           <object class="GtkBox">

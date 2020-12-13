@@ -6,7 +6,11 @@ typedef struct{
     GtkWidget *account;
     GtkWidget *password;
     GtkWidget *re_password;
-    GtkWidget *lbl_err_account;
+    GtkWidget *lbl_err_name;
+    GtkWidget *lbl_err_username;
+    GtkWidget *lbl_err_password;
+    GtkWidget *lbl_err_re_password;
+    GtkWidget *lbl_invalid_signup;
     int sockfd;
 }signup_form;
 gboolean check_signup = FALSE;
@@ -21,30 +25,6 @@ void setCheckSignup(){
     	check_signup = TRUE;
     else
     	check_signup = FALSE;
-}
-
-//check error or invalid
-
-Error check_account(char *account){
-    Error err;
-    if(strlen(account) < 6){
-        err = ERR_ACCOUNT;
-    }
-    else{
-        err = ERR_NONE;
-    }
-    return err;
-}
-
-Error check_password(char *password){
-    Error err;
-    if(strlen(password) < 6){
-        err = ERR_MIN_PASSWORD;
-    }
-    else{
-        err = ERR_NONE;
-    }
-    return err;
 }
 
 //main
@@ -68,7 +48,11 @@ int signup(int argc, char **argv,int sockfd)
     signup_inputed->password = GTK_WIDGET(gtk_builder_get_object(builder_signup,"signup_entry_password"));
     signup_inputed->re_password = GTK_WIDGET(gtk_builder_get_object(builder_signup,"signup_entry_re_password"));
 
-    signup_inputed->lbl_err_account = GTK_WIDGET(gtk_builder_get_object(builder_signup,"signup_lbl_err_account"));
+    signup_inputed->lbl_err_username = GTK_WIDGET(gtk_builder_get_object(builder_signup,"signup_lbl_err_username"));
+    signup_inputed->lbl_err_name = GTK_WIDGET(gtk_builder_get_object(builder_signup,"signup_lbl_err_name"));
+    signup_inputed->lbl_err_password = GTK_WIDGET(gtk_builder_get_object(builder_signup,"signup_lbl_err_password"));
+    signup_inputed->lbl_err_re_password = GTK_WIDGET(gtk_builder_get_object(builder_signup,"signup_lbl_err_re_password"));
+    signup_inputed->lbl_invalid_signup = GTK_WIDGET(gtk_builder_get_object(builder_signup,"signup_lbl_invalid_signup"));
     //--
     g_object_unref(builder_signup);
 
@@ -87,43 +71,112 @@ void on_signup_ui_destroy()
 }
 
 void on_signup_btn_signup_clicked(GtkButton *button, signup_form *signup_in){
-    
-   
     Object *obj = new_signup_object();
-    Error error;
-    const char *format_error = "<span foreground='red'>%s</span>" ;
-    //const char *format_invalid = "<span foreground='green' weight='bold' font='13'>%s</span>";
+    Error err_name, err_username, err_password, err_re_password;
     char *markup_message;
+    const char *format_error = "<span foreground='red'>%s</span>" ;
+    const char *format_invalid = "<span foreground='green' weight='bold' font='13'>%s</span>";
     g_stpcpy(obj->signup.name , g_strdup(gtk_entry_get_text(GTK_ENTRY(signup_in->name))));
     g_stpcpy(obj->signup.username , g_strdup(gtk_entry_get_text(GTK_ENTRY(signup_in->account))));
     g_stpcpy(obj->signup.password , g_strdup(gtk_entry_get_text(GTK_ENTRY(signup_in->password))));
     g_stpcpy(obj->signup.re_password , g_strdup(gtk_entry_get_text(GTK_ENTRY(signup_in->re_password))));
-    g_print("Name: %s\n",obj->signup.name);
-    g_print("Account: %s\n",obj->signup.username);
-    g_print("Password: %s\n",obj->signup.password);
-    g_print("Confirm Password: %s\n",obj->signup.re_password);
-    error = check_account(obj->signup.username);
-    if(error == ERR_ACCOUNT){
-        char message[100];
-        error_to_string(error,message);
-        markup_message = g_markup_printf_escaped(format_error,message);
-        if(gtk_widget_is_visible(signup_in->lbl_err_account)){
-            gtk_label_set_markup(GTK_LABEL(signup_in->lbl_err_account),markup_message);
-            //gtk_label_set_text(GTK_LABEL(signup_in->lbl_err_account),message);
-        }else{
-            gtk_widget_set_visible(signup_in->lbl_err_account,TRUE);
-            gtk_label_set_markup(GTK_LABEL(signup_in->lbl_err_account),markup_message);
-            //gtk_label_set_text(GTK_LABEL(signup_in->lbl_err_account),message);
-        }
-        g_free(markup_message);
-        
-    }else{
- 
+    //check loi
+    err_name = check_signup_name(obj->signup.name);
+    err_username = check_signup_username(obj->signup.username);
+    err_password = check_signup_password(obj->signup.password);
+    err_re_password = check_signup_re_password(obj->signup.re_password,obj->signup.password);
+    //hien thi loi neu co
+    if((err_name == ERR_NONE) && (err_username == ERR_NONE) && 
+        (err_password == ERR_NONE) && (err_re_password == ERR_NONE)){
+        Error err_has_username_; char msg_err_username[100];
+        int recvBytes;
+        char str[100];
+        //dong cac tab loi va invalid
+        gtk_widget_set_visible(signup_in->lbl_err_name,FALSE);
+        gtk_widget_set_visible(signup_in->lbl_err_username,FALSE);
+        gtk_widget_set_visible(signup_in->lbl_err_password,FALSE);
+        gtk_widget_set_visible(signup_in->lbl_err_re_password,FALSE);
+        gtk_widget_set_visible(signup_in->lbl_invalid_signup,FALSE);
+        //gui obj len server neu dau vao dc kiem duyet
         if(send(signup_in->sockfd,obj,sizeof(Object),0) < 0){
-            perror("send- login");
+            perror("send- signup");
             return;
         }
+        //nhan tin hieu tu server 
+        if((recvBytes = recv(signup_in->sockfd,msg_err_username,sizeof(msg_err_username),0)) < 0){
+            perror("recv - signup");
+            return;
+        }
+        msg_err_username[recvBytes] = '\0';
+        err_has_username_ = error_to_enum(msg_err_username);
+        error_to_string(err_has_username_,str);
+        if(err_has_username_ == ERR_NONE){ //dang ky thanh cong
+            char message[100];
+            Invalid inv = OK_SIGNUP;
+            invalid_to_string(inv, message);
+            markup_message = g_markup_printf_escaped(format_invalid,message);
+            if(gtk_widget_is_visible(signup_in->lbl_invalid_signup) == FALSE)
+                gtk_widget_set_visible(signup_in->lbl_invalid_signup,TRUE);
+            gtk_label_set_markup(GTK_LABEL(signup_in->lbl_invalid_signup),markup_message);
+        }else{ //username da ton tai
+            char message[101];
+            error_to_string(err_has_username_,message);
+            markup_message = g_markup_printf_escaped(format_error,message);
+            if(gtk_widget_is_visible(signup_in->lbl_err_username) == FALSE)
+                gtk_widget_set_visible(signup_in->lbl_err_username,TRUE);
+            gtk_label_set_markup(GTK_LABEL(signup_in->lbl_err_username),markup_message);
+        }
+
+    }else{
+        //hien thi loi name
+        if(err_name != ERR_NONE){
+            char message[100];
+            error_to_string(err_name,message);
+            markup_message = g_markup_printf_escaped(format_error,message);
+            if(gtk_widget_is_visible(signup_in->lbl_err_name) == FALSE){
+                gtk_widget_set_visible(signup_in->lbl_err_name,TRUE);
+            }             
+            gtk_label_set_markup(GTK_LABEL(signup_in->lbl_err_name),markup_message);
+        }else{
+            gtk_widget_set_visible(signup_in->lbl_err_name,FALSE);
+        }
+        //hien thi loi username
+        if(err_username != ERR_NONE){
+            char message[100];
+            error_to_string(err_username,message);
+            markup_message = g_markup_printf_escaped(format_error,message);
+            if(gtk_widget_is_visible(signup_in->lbl_err_username) == FALSE)
+                gtk_widget_set_visible(signup_in->lbl_err_username,TRUE);
+            gtk_label_set_markup(GTK_LABEL(signup_in->lbl_err_username),markup_message);
+        }else{
+            gtk_widget_set_visible(signup_in->lbl_err_username,FALSE);
+        }
+        //hien thi loi password
+        if(err_password != ERR_NONE){
+            char message[100];
+            error_to_string(err_password,message);
+            markup_message = g_markup_printf_escaped(format_error,message);
+            if(gtk_widget_is_visible(signup_in->lbl_err_password) == FALSE)
+                gtk_widget_set_visible(signup_in->lbl_err_password,TRUE);
+            gtk_label_set_markup(GTK_LABEL(signup_in->lbl_err_password),markup_message);
+        }else{
+            gtk_widget_set_visible(signup_in->lbl_err_password,FALSE);
+        }
+        //hien thi loi confirm password
+        
+        if(err_re_password != ERR_NONE){
+            char message[100];
+            error_to_string(err_re_password,message);
+            markup_message = g_markup_printf_escaped(format_error,message);
+            if(gtk_widget_is_visible(signup_in->lbl_err_re_password) == FALSE)
+                gtk_widget_set_visible(signup_in->lbl_err_re_password,TRUE);
+            gtk_label_set_markup(GTK_LABEL(signup_in->lbl_err_re_password),markup_message);
+        }else{
+            gtk_widget_set_visible(signup_in->lbl_err_re_password,FALSE);
+        }
     }
+    //giai phong bo nho
+    g_free(markup_message);
     free_object(obj);
 
 }
