@@ -52,3 +52,5 @@ Error check_signup_username(char *account);
 Error check_signup_password(char *password);
 //kiem tra loi cua confirm password
 Error check_signup_re_password(char *re_password, char *password);
+//kiemtra loi cua cur_password
+Error check_current_password(char *cur_pass, char *login_password);

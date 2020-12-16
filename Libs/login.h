@@ -14,7 +14,7 @@ typedef struct{
 }login_form;
 
 GtkWidget       *window_login;
-
+int sockfd_login_;
 gboolean getCheckLogin(){
     return getCheckMenu();
 }
@@ -28,7 +28,7 @@ void setCheckLogin(){
 int login(int argc, char **argv,int sockfd)
 {
     GtkBuilder      *builder_login; 
-    
+    sockfd_login_ = sockfd;
     login_form *login_inputed = g_slice_new(login_form);
     login_inputed->argc = argc;
     login_inputed->argv = *argv;
@@ -77,7 +77,7 @@ void on_login_btn_login_clicked(GtkButton *button, login_form *login_in){
     //const char *format_invalid = "<span foreground='green' weight='bold' font='13'>%s</span>";
     g_stpcpy(object->login.username,g_strdup(gtk_entry_get_text(GTK_ENTRY(login_in->account))));
     g_stpcpy(object->login.password , g_strdup(gtk_entry_get_text(GTK_ENTRY(login_in->password))));
-    dup_obj_login(object);
+    dup_obj_login(object, login_in->sockfd);
     //test
     set_obj_chat_private(object->login.username, login_in->sockfd);
     //
@@ -125,7 +125,7 @@ void on_login_btn_login_clicked(GtkButton *button, login_form *login_in){
             //cach 2:
             //gtk_widget_set_visible(window_login,FALSE);
             //---------
-            menu_chat(login_in->argc,&login_in->argv);         
+            menu_chat(login_in->argc,&login_in->argv,sockfd_login_);         
         }
 
     }else{

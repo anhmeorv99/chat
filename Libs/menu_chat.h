@@ -2,12 +2,14 @@
 #include <gtk/gtk.h>
 #include "change_password.h"
 #include "chat_private.h"
+#include "group_chat.h"
+#include "menu_list_friend.h"
 
 GtkWidget       *window_menu;
 gboolean check_menu = FALSE;
 int argc_command;
 char *argv_command;
-
+int sockfd_menu_chat;
 gboolean getCheckMenu(){
     return check_menu;
 }
@@ -19,12 +21,12 @@ void setCheckMenu(){
         check_menu = FALSE;
 }
 
-int menu_chat(int argc, char **argv)
+int menu_chat(int argc, char **argv, int sockfd)
 {
     GtkBuilder      *builder_menu; 
     argc_command = argc;
     argv_command = *argv;
-
+    sockfd_menu_chat = sockfd;
     gtk_init(&argc, &argv);
 
     builder_menu = gtk_builder_new();
@@ -52,6 +54,14 @@ void on_menu_chat_destroy()
 
 void on_btn_chat_private_clicked(){
     chat_private(argc_command,&argv_command);
+}
+
+void on_btn_chat_group_clicked(){
+    group_chat(argc_command,&argv_command,sockfd_menu_chat);
+}
+
+void on_btn_list_friend_menu_clicked(){
+    menu_list_friend(argc_command,&argv_command,sockfd_menu_chat);
 }
 
 void on_btn_change_password_clicked(){

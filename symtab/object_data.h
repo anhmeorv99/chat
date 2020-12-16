@@ -4,10 +4,10 @@ typedef enum {
 	SIGNAL_NONE,
 	SIGNAL_LOGIN,
 	SIGNAL_SIGNUP,
-	SIGNAL_CHAT_PRIVATE
+	SIGNAL_CHAT_PRIVATE,
 	//SIGNAL_CHAT_GROUP,
 	//SIGNAL_LIST_FRIEND,
-	//SIGNAL_CHANGE_PASSWORD,
+	SIGNAL_CHANGE_PASSWORD
 	//SIGNAL_ADMIN,
 	//SIGNAL_LOGUOT
 }Signals;
@@ -31,10 +31,17 @@ typedef struct {
 }Chat_Private;
 
 typedef struct {
+	char username[30];
+	char new_password[30];
+	char cur_password[30];
+}Change_Password;
+
+typedef struct {
 	Signals signal;
 	Login login;
 	Signup signup;
 	Chat_Private chat_private;
+	Change_Password change_password;
 }Object;
 
 //cap phat Object void signal la none
@@ -45,6 +52,8 @@ Object *new_login_object();
 Object *new_signup_object();
 //cap phat Object voi signal la Chat_Private
 Object *new_chat_private_object();
+//cap phat Object voi signal la Change_Password
+Object *new_change_password_object();
 //sao chep Object
 Object *duplicate_object(Object *obj);
 //giai phong Object
