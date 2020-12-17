@@ -1,4 +1,5 @@
 #include <gtk/gtk.h>
+#include "chat_group.h"
 GtkWidget *window_group_chat;
 GtkWidget *window_create_group_chat;
 int sockfd_group_chat;
@@ -8,7 +9,7 @@ char *argv_group_chat;
 int create_group_chat(int argc, char **argv);
 //---------------------------------
 //main
-int group_chat(int argc, char **argv,int sockfd)
+int list_group_chat(int argc, char **argv,int sockfd)
 {
     GtkBuilder      *builder_group_chat; 
     sockfd_group_chat = sockfd;
@@ -42,6 +43,10 @@ void on_list_group_chat_destroy()
 
 void on_btn_create_group_clicked(){
 	create_group_chat(argc_group_chat,&argv_group_chat);
+}
+
+void on_btn_group_test_clicked(){
+	chat_group(argc_group_chat,&argv_group_chat);
 }
 
 //-----------------------create group chat----------------------------

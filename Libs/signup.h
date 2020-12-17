@@ -1,6 +1,7 @@
 
 #include <gtk/gtk.h>
 #include <string.h>
+#include "login.h"
 typedef struct{
     GtkWidget *name;
     GtkWidget *account;
@@ -13,27 +14,17 @@ typedef struct{
     GtkWidget *lbl_invalid_signup;
     int sockfd;
 }signup_form;
-gboolean check_signup = FALSE;
+
 GtkWidget       *window_signup;
 
-gboolean getCheckSignup(){
-    return check_signup;
-}
-
-void setCheckSignup(){
-	if(getCheckSignup() == FALSE)
-    	check_signup = TRUE;
-    else
-    	check_signup = FALSE;
-}
-
 //main
-int signup(int argc, char **argv,int sockfd)
+int signup(int argc, char **argv)
 {
     GtkBuilder      *builder_signup; 
     
     signup_form *signup_inputed = g_slice_new(signup_form);
-    signup_inputed->sockfd = sockfd;
+    
+    signup_inputed->sockfd = sock_app;
     gtk_init(&argc, &argv);
 
     builder_signup = gtk_builder_new();
@@ -42,7 +33,7 @@ int signup(int argc, char **argv,int sockfd)
     window_signup = GTK_WIDGET(gtk_builder_get_object(builder_signup, "signup_ui"));
     gtk_builder_connect_signals(builder_signup, signup_inputed);
     //--
-    //gtk_window_set_decorated(GTK_WINDOW(window_signup),FALSE);
+    gtk_window_set_decorated(GTK_WINDOW(window_signup),FALSE);
     signup_inputed->name = GTK_WIDGET(gtk_builder_get_object(builder_signup,"signup_entry_name"));
     signup_inputed->account = GTK_WIDGET(gtk_builder_get_object(builder_signup,"signup_entry_account"));
     signup_inputed->password = GTK_WIDGET(gtk_builder_get_object(builder_signup,"signup_entry_password"));
@@ -66,8 +57,8 @@ int signup(int argc, char **argv,int sockfd)
 // called when window is closed
 void on_signup_ui_destroy()
 {
-    setCheckSignup();
     gtk_main_quit();
+    gtk_widget_set_visible(window,TRUE);
 }
 
 void on_signup_btn_signup_clicked(GtkButton *button, signup_form *signup_in){
@@ -80,6 +71,7 @@ void on_signup_btn_signup_clicked(GtkButton *button, signup_form *signup_in){
     g_stpcpy(obj->signup.username , g_strdup(gtk_entry_get_text(GTK_ENTRY(signup_in->account))));
     g_stpcpy(obj->signup.password , g_strdup(gtk_entry_get_text(GTK_ENTRY(signup_in->password))));
     g_stpcpy(obj->signup.re_password , g_strdup(gtk_entry_get_text(GTK_ENTRY(signup_in->re_password))));
+
     //check loi
     err_name = check_signup_name(obj->signup.name);
     err_username = check_signup_username(obj->signup.username);
@@ -182,6 +174,5 @@ void on_signup_btn_signup_clicked(GtkButton *button, signup_form *signup_in){
 }
 
 void on_signup_btn_cance_clicked(){
-    
     gtk_window_close(GTK_WINDOW(window_signup));
 }

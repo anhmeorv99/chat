@@ -8,31 +8,18 @@ typedef struct{
     GtkWidget *lbl_err_username;
     GtkWidget *lbl_err_password;
     GtkWidget *lbl_invalid_login; 
-    int argc;
-    char *argv;
-    int sockfd;
 }login_form;
 
-GtkWidget       *window_login;
-int sockfd_login_;
-gboolean getCheckLogin(){
-    return getCheckMenu();
-}
+GtkWidget       *window;
+int sock_app;
+int argc_param;
+char *argv_param;
 
-void setCheckLogin(){
-    setCheckMenu();
-    
-}
-
-
-int login(int argc, char **argv,int sockfd)
+int login(int argc, char **argv)
 {
     GtkBuilder      *builder_login; 
-    sockfd_login_ = sockfd;
+    
     login_form *login_inputed = g_slice_new(login_form);
-    login_inputed->argc = argc;
-    login_inputed->argv = *argv;
-    login_inputed->sockfd = sockfd;
     
     gtk_init(&argc, &argv);
 
@@ -42,7 +29,7 @@ int login(int argc, char **argv,int sockfd)
     window_login = GTK_WIDGET(gtk_builder_get_object(builder_login, "login_ui"));
     gtk_builder_connect_signals(builder_login, login_inputed);
     //----
-    //gtk_window_set_decorated(GTK_WINDOW(window_login),FALSE);
+    gtk_window_set_decorated(GTK_WINDOW(window_login),FALSE);
     login_inputed->account = GTK_WIDGET(gtk_builder_get_object(builder_login,"login_entry_account"));
     login_inputed->password = GTK_WIDGET(gtk_builder_get_object(builder_login,"login_entry_password"));
     login_inputed->lbl_err_username = GTK_WIDGET(gtk_builder_get_object(builder_login,
@@ -65,8 +52,8 @@ int login(int argc, char **argv,int sockfd)
 // called when window is closed
 void on_login_ui_destroy()
 {
-    setCheckLogin();
     gtk_main_quit();
+    gtk_widget_set_visible(window,TRUE);
 }
 
 void on_login_btn_login_clicked(GtkButton *button, login_form *login_in){
@@ -77,9 +64,9 @@ void on_login_btn_login_clicked(GtkButton *button, login_form *login_in){
     //const char *format_invalid = "<span foreground='green' weight='bold' font='13'>%s</span>";
     g_stpcpy(object->login.username,g_strdup(gtk_entry_get_text(GTK_ENTRY(login_in->account))));
     g_stpcpy(object->login.password , g_strdup(gtk_entry_get_text(GTK_ENTRY(login_in->password))));
-    dup_obj_login(object, login_in->sockfd);
+    dup_obj_login(object, sock_app);
     //test
-    set_obj_chat_private(object->login.username, login_in->sockfd);
+    set_obj_chat_private(object->login.username, sock_app);
     //
     g_print("Account: %s\n",object->login.username);
     g_print("Password: %s\n",object->login.password);
@@ -95,11 +82,11 @@ void on_login_btn_login_clicked(GtkButton *button, login_form *login_in){
         char msg_err_login[100];
         Error err_login;
         int recvBytes;
-        if(send(login_in->sockfd,object,sizeof(Object),0) < 0){
+        if(send(sock_app,object,sizeof(Object),0) < 0){
             perror("send - login");
             return;
         }
-        if((recvBytes = recv(login_in->sockfd,msg_err_login,sizeof(msg_err_login),0)) < 0){
+        if((recvBytes = recv(sock_app,msg_err_login,sizeof(msg_err_login),0)) < 0){
             perror("recv-login");
             return;
         }
@@ -116,16 +103,11 @@ void on_login_btn_login_clicked(GtkButton *button, login_form *login_in){
             }
             g_free(markup_message);
             free_object(object);    
-        }else{  // dang nhap thanh cong  
-            
-            free_object(object);
-            //cach 1:
-            setCheckLogin();
-            gtk_window_close(GTK_WINDOW(window_login));
-            //cach 2:
-            //gtk_widget_set_visible(window_login,FALSE);
-            //---------
-            menu_chat(login_in->argc,&login_in->argv,sockfd_login_);         
+        }else{  // dang nhap thanh cong            
+            free_object(object); 
+            //gtk_window_close(GTK_WINDOW(window_login));
+            gtk_widget_set_visible(window_login,FALSE);
+            menu_chat(argc_param,&argv_param,sock_app);         
         }
 
     }else{
@@ -151,6 +133,5 @@ void on_login_btn_login_clicked(GtkButton *button, login_form *login_in){
 }
 
 void on_login_btn_cance_clicked(){
-    
     gtk_window_close(GTK_WINDOW(window_login));
 }

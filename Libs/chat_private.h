@@ -19,9 +19,12 @@ typedef struct {
 }app_widgets;
 int row;
 //test
+
 int recv_chat;
+
 app_widgets        *widgets;
-volatile sig_atomic_t flag = 0;
+GtkWidget       *window_friend_chat;
+
 
 void set_obj_chat_private(char *from_username, int sockfd){
     widgets = g_slice_new(app_widgets);
@@ -36,17 +39,19 @@ void recv_to_friend(void *app){
     char message_recv[250];
     app_widgets *widg = (app_widgets*)app;
     while(1){
-        recv_chat = recv(widg->sock_chat_private,message_recv,sizeof(message_recv),0);
-        message_recv[recv_chat] = '\0';
-        if(gtk_text_buffer_get_char_count(gtk_text_view_get_buffer(widg->txtvw_show)) != 0){
-            gtk_text_buffer_insert_at_cursor(widg->text_buffer_view,"\n",-1);
-        }
-        gtk_text_buffer_insert_at_cursor(widg->text_buffer_view,message_recv,-1);
+ 
+            recv_chat = recv(widg->sock_chat_private,message_recv,sizeof(message_recv),0);
+            if(recv_chat < 0 ) break;
+            message_recv[recv_chat] = '\0';
+            puts(message_recv);
+        
+            if(gtk_text_buffer_get_char_count(gtk_text_view_get_buffer(widg->txtvw_show)) != 0){
+                gtk_text_buffer_insert_at_cursor(widg->text_buffer_view,"\n",-1);
+            }
+            gtk_text_buffer_insert_at_cursor(widg->text_buffer_view,message_recv,-1);   
+  
 
-        if(recv_chat < 0 ) break;
     }
-    
-    //
     
 }
 
@@ -95,7 +100,7 @@ int chat_private(int argc, char **argv)
     //gtk_widget_set_visible(widgets->scrol_list_friend,FALSE);   
            
     gtk_main();
-
+    pthread_cancel(id);
     g_slice_free(app_widgets, widgets);
 
     return 0;
@@ -105,6 +110,7 @@ int chat_private(int argc, char **argv)
 void on_window_chat_destroy()
 {
     gtk_main_quit();
+    gtk_widget_set_visible(window_friend_chat,TRUE);
 }
 
 void on_chat_send_clicked(GtkButton *button, app_widgets *widg){
@@ -117,7 +123,6 @@ void on_chat_send_clicked(GtkButton *button, app_widgets *widg){
         gtk_text_buffer_insert_at_cursor(widg->text_buffer_view,"\n",-1);
     }
     //test
-    printf("sock - %d",widg->sock_chat_private);
  
     strcpy(widg->object_chat->chat_private.message,gtk_text_buffer_get_text(
         gtk_text_view_get_buffer(widg->text_write),&start,&end,FALSE));
@@ -166,3 +171,4 @@ void on_add_friend_clicked(GtkButton *button, app_widgets *widg){
 void on_row(GtkButton *b){
     g_print("You clicked button: %s\n",gtk_button_get_label(b));
 }
+
