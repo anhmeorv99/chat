@@ -8,6 +8,7 @@
     <property name="resizable">False</property>
     <property name="default_width">440</property>
     <property name="default_height">250</property>
+    <signal name="destroy" handler="on_app_chat_destroy" swapped="no"/>
     <child>
       <placeholder/>
     </child>

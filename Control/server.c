@@ -309,6 +309,20 @@ int main(int argc, char **argv){
                             }
                             
                             break;
+                        case SIGNAL_CHANGE_PASSWORD:
+                            printf("------Change password-----------\n");
+                            printf("Username: %s\n",obj->change_password.username);
+                            printf("New Password: %s\n",obj->change_password.new_password);
+                            User *user_change_pass = user;
+                            
+                            while(user_change_pass != NULL){
+                                if(strcmp(obj->change_password.username,user_change_pass->signup.username) == 0){
+                                    strcpy(user_change_pass->signup.password,obj->change_password.new_password);
+                                    break;
+                                }
+                                user_change_pass = user_change_pass->next;
+                            }
+                            break;
                         case SIGNAL_NONE:
                             break;
                     }

@@ -166,3 +166,17 @@ Error check_signup_re_password(char *re_password, char *password){
 	}
 	return err;
 }
+//kiemtra loi cua cur_password
+Error check_current_password(char *cur_pass, char *login_password){
+	Error err;
+	if(strlen(cur_pass) == 0){
+		err = ERR_NULL_RE_PASSWORD;
+	}
+	else if(strcmp(cur_pass,login_password) != 0){
+		err = ERR_CAN_NOT_PASSWORD;
+	}
+	else{
+		err = ERR_NONE;
+	}
+	return err;
+}

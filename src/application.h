@@ -1,17 +1,12 @@
 #include <gtk/gtk.h>
-#include "../Libs/login.h"
 #include "../Libs/signup.h"
 
-GtkWidget       *window;
-int argc_param;
-char *argv_param;
-int sockfd_app;
 int app(int argc, char **argv,int sockfd)
 {
     GtkBuilder      *builder; 
     argc_param = argc;
     argv_param = *argv;
-    sockfd_app = sockfd;
+    sock_app = sockfd;
     gtk_init(&argc, &argv);
 
     builder = gtk_builder_new();
@@ -21,9 +16,7 @@ int app(int argc, char **argv,int sockfd)
 
     gtk_builder_connect_signals(builder, NULL);
 
-    //gtk_window_set_resizable(GTK_WINDOW(window),FALSE);
     //gtk_window_set_decorated(GTK_WINDOW(window),FALSE);
-    //gtk_window_set_icon_from_file(GTK_WINDOW(window),"images/icon.png",NULL);
 
     g_object_unref(builder);
 
@@ -40,21 +33,11 @@ void on_app_chat_destroy()
 }
 
 void on_btn_login_clicked(){
-    //gtk_window_close(GTK_WINDOW(window));
-    if(getCheckLogin() == FALSE){
-        setCheckLogin();
-        login(argc_param,&argv_param,sockfd_app);
-
-    }
-    
+    gtk_widget_set_visible(window,FALSE);
+    login(argc_param,&argv_param);
 }
 
 void on_btn_signup_clicked(){
-    //gtk_window_close(GTK_WINDOW(window));
-    if(getCheckSignup() == FALSE){
-        setCheckSignup();
-        signup(argc_param,&argv_param,sockfd_app);
-    }
-
-    
+    gtk_widget_set_visible(window,FALSE);
+    signup(argc_param,&argv_param); 
 }
