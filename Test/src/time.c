@@ -37,9 +37,8 @@ gboolean timer_handler(app_widgets *widgets)
 {
     GDateTime *date_time;
     gchar *dt_format;
-
     date_time = g_date_time_new_now_local();                        // get local time
-    dt_format = g_date_time_format(date_time, "%H:%M:%S");            // 24hr time format
+    dt_format = g_date_time_format(date_time, "%F %H:%M:%S");            // 24hr time format
     gtk_label_set_text(GTK_LABEL(widgets->w_lbl_time), dt_format);    // update label
     g_free (dt_format);
     

@@ -15,7 +15,8 @@ enum Error_ {
 	ERR_HAS_USERNAME,		//Username da ton tai
 	ERR_USERNAME_PASSWORD,	//Username hoac password khong dung
 	ERR_NULL_RE_PASSWORD,	//re-password chua nhap
-	ERR_NOT_RE_PASSWORD		//re-password khong giong
+	ERR_NOT_RE_PASSWORD,		//re-password khong giong
+	ERR_USERNAME_LOGIN		//username dang dang nhap
 };
 
 typedef enum Error_ Error;

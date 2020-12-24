@@ -62,6 +62,6 @@ void on_btn_change_password_clicked(){
     
 }
 
-void on_btn_logout_clicked(){ 
+void on_btn_logout_clicked(){
     gtk_window_close(GTK_WINDOW(window_menu));
 }
