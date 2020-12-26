@@ -7,6 +7,7 @@ typedef enum {
 	SIGNAL_CHAT_PRIVATE,
 	//SIGNAL_CHAT_GROUP,
 	//SIGNAL_LIST_FRIEND,
+	SIGNAL_ADD_FRIEND,
 	SIGNAL_CHANGE_PASSWORD
 	//SIGNAL_ADMIN,
 	//SIGNAL_LOGUOT
@@ -28,6 +29,7 @@ typedef struct {
 	char from_username[30];
 	char to_username[30];
 	char message[200];
+	char create_at[50];
 }Chat_Private;
 
 typedef struct {
@@ -37,9 +39,15 @@ typedef struct {
 }Change_Password;
 
 typedef struct {
+	char username[30];
+	char username_friend[30];
+}Add_Friend;
+
+typedef struct {
 	Signals signal;
 	Login login;
 	Signup signup;
+	Add_Friend add_friend;
 	Chat_Private chat_private;
 	Change_Password change_password;
 }Object;

@@ -65,6 +65,7 @@ void on_login_btn_login_clicked(GtkButton *button, login_form *login_in){
     g_stpcpy(object->login.username,g_strdup(gtk_entry_get_text(GTK_ENTRY(login_in->account))));
     g_stpcpy(object->login.password , g_strdup(gtk_entry_get_text(GTK_ENTRY(login_in->password))));
     dup_obj_login(object, sock_app);
+    dup_obj_list_friend(object);
     //test
     set_obj_chat_private(object->login.username, sock_app);
     //
@@ -97,13 +98,19 @@ void on_login_btn_login_clicked(GtkButton *button, login_form *login_in){
             if(err_login == ERR_NOT_USERNAME){
                 gtk_widget_set_visible(login_in->lbl_err_username,TRUE);
                 gtk_label_set_markup(GTK_LABEL(login_in->lbl_err_username),markup_message);
-            }else{
+            }
+            else if(err_login == ERR_USERNAME_LOGIN){
+                gtk_widget_set_visible(login_in->lbl_err_username,TRUE);
+                gtk_label_set_markup(GTK_LABEL(login_in->lbl_err_username),markup_message);
+            }
+            else{
                 gtk_widget_set_visible(login_in->lbl_err_password,TRUE);
                 gtk_label_set_markup(GTK_LABEL(login_in->lbl_err_password),markup_message);
             }
             g_free(markup_message);
             free_object(object);    
-        }else{  // dang nhap thanh cong            
+        }else{  // dang nhap thanh cong 
+            dup_obj_chat_private(object);          
             free_object(object); 
             //gtk_window_close(GTK_WINDOW(window_login));
             gtk_widget_set_visible(window_login,FALSE);

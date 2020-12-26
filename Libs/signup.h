@@ -110,6 +110,7 @@ void on_signup_btn_signup_clicked(GtkButton *button, signup_form *signup_in){
             if(gtk_widget_is_visible(signup_in->lbl_invalid_signup) == FALSE)
                 gtk_widget_set_visible(signup_in->lbl_invalid_signup,TRUE);
             gtk_label_set_markup(GTK_LABEL(signup_in->lbl_invalid_signup),markup_message);
+            
         }else{ //username da ton tai
             char message[101];
             error_to_string(err_has_username_,message);

@@ -8,8 +8,8 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include "../symtab/object_data.h"
-#include "../symtab/error_invalid.h"
-
+//#include "../symtab/error_invalid.h"
+#include "../symtab/database.h"
 #define QUEUE_MAX 10
 //test
 typedef struct {
@@ -20,37 +20,7 @@ typedef struct Node_ {
     Elementtype element;  
     struct Node_ *next;
 }Node;
-typedef struct User_ {
-    Signup signup;
-    struct User_ *next;
-}User;
-User *new_user(Signup signup){
-    User *new = (User*)malloc(sizeof(User));
-    new->signup = signup;
-    new->next = NULL;
-    return new;
-}
-User *insert_user_at_end(User *user, Signup signup){
-    User *new = new_user(signup);
-    if(user == NULL)
-        return new;
-    User *cur = user;
-    while(cur->next != NULL)
-        cur = cur->next;
-    cur->next = new;
-    return user;
-}
 
-void print_user(User *user){
-    User *cur = user;
-    while(cur != NULL){
-        printf("Name: %s\n",cur->signup.name);
-                            printf("Account: %s\n",cur->signup.username);
-                            printf("Password: %s\n",cur->signup.password);
-                            printf("Confirm Password: %s\n\n",cur->signup.re_password);
-                            cur = cur->next;
-    }
-}
 
 Node *new_node(Elementtype e){
     Node *new = (Node*)malloc(sizeof(Node));
@@ -96,9 +66,10 @@ int main(int argc, char **argv){
     int i = 0;
     fd_set readfds, masterfds;
     int client[QUEUE_MAX];
+
     //test
     Node *root = NULL;
-    User *user = NULL;
+    List_DB *root_db = NULL;
     //
     if(argc != 2){
         printf("Error: sai cu phap\n");
@@ -212,22 +183,27 @@ int main(int argc, char **argv){
                             printf("Password: %s\n\n",obj->login.password);  
                             //check loi
                             {
-                                User *cur_user = user;
+                                List_DB *cur_db = root_db;
                                 bool check_login = false;
                                 Error err_login;
                                 char msg_err_login[100];
-                                while(cur_user != NULL){
-                                    if(strcmp(cur_user->signup.username,obj->login.username) == 0){
+                                while(cur_db != NULL){
+                                    if(strcmp(cur_db->DB->user.username,obj->login.username) == 0){
                                         check_login = true;
                                         break;
                                     }
-                                    cur_user = cur_user->next;
+                                    cur_db = cur_db->next;
                                 }
                                 if(check_login == true){
-                                    if(strcmp(cur_user->signup.password, obj->login.password) != 0){ // sai pass
+                                    if(strcmp(cur_db->DB->user.password, obj->login.password) != 0){ // sai pass
                                         err_login = ERR_CAN_NOT_PASSWORD;
                                     }else{ //dang nhap thanh cong
-                                        err_login = ERR_NONE;
+                                        if(cur_db->DB->user.login_status == false){
+                                            err_login = ERR_NONE;
+                                            cur_db->DB->user.login_status = true;
+                                        }else{
+                                            err_login = ERR_USERNAME_LOGIN;
+                                        }
                                     }
                                 }else{ //sai username
                                     err_login = ERR_NOT_USERNAME;
@@ -249,29 +225,32 @@ int main(int argc, char **argv){
                             printf("Account: %s\n",obj->signup.username);
                             printf("Password: %s\n",obj->signup.password);
                             printf("Confirm Password: %s\n\n",obj->signup.re_password);
-                            Signup sign;
+                     
+                            Data_base *db = (Data_base*)malloc(sizeof(Data_base));
                             Error err = ERR_NONE;
                             char msg_err[100];
-                            strcpy(sign.name,obj->signup.name);
-                            strcpy(sign.username,obj->signup.username);
-                            strcpy(sign.password,obj->signup.password);
-                            strcpy(sign.re_password, obj->signup.re_password);
-                            if(user == NULL)
-                                user = insert_user_at_end(user,sign);
+                       
+                            strcpy(db->user.name,obj->signup.name);
+                            strcpy(db->user.username,obj->signup.username);
+                            strcpy(db->user.password,obj->signup.password);
+                            db->user.login_status = false;
+                            db->user.is_admin = false;
+                            if(root_db == NULL)
+                                root_db = insert_at_end_db(root_db,db);
                             else{
-                                User *cur_user = user;
+                                List_DB *cur_db = root_db;
                                 bool check = false;
-                                while(cur_user != NULL){
-                                    if(strcmp(sign.username,cur_user->signup.username) == 0){
+                                while(cur_db != NULL){
+                                    if(strcmp(obj->signup.username,cur_db->DB->user.username) == 0){
                                         check = true;
                                         break;
                                     }
-                                    cur_user = cur_user->next;
+                                    cur_db = cur_db->next;
                                 }
                                 if(check == true){
                                     err = ERR_HAS_USERNAME;
                                 }else{
-                                    user = insert_user_at_end(user,sign);
+                                    root_db = insert_at_end_db(root_db,db);
                                 }
                             }
                             error_to_string(err,msg_err);
@@ -283,20 +262,23 @@ int main(int argc, char **argv){
                                 close(sock_cl);
                                 continue;
                             }
-                            print_user(user);
+                            
                             //obj->signals = SIGNAL_NONE;
                             break;
                         case SIGNAL_CHAT_PRIVATE:
                             
                             printf("%s : %s\n",obj->chat_private.from_username,obj->chat_private.message);
+                            //luu db
+
                             Node *cur_chat = root;
-                            
+                            Object *obj_chat_private;
                             while(cur_chat != NULL){
                                 if(strcmp(cur_chat->element.username,obj->chat_private.from_username) != 0){
-                                    char message_[250];
-                                    sprintf(message_,"[%s]:\n%s",obj->chat_private.from_username,obj->chat_private.message);
-                                    if(send(cur_chat->element.sockfd,message_, 
-                                        strlen(message_),0)<0){
+                                    //char message_[250];
+                                    //sprintf(message_,"[%s]:\n%s",obj->chat_private.from_username,obj->chat_private.message);
+                                    obj_chat_private = duplicate_object(obj);
+                                    if(send(cur_chat->element.sockfd,obj_chat_private, 
+                                        sizeof(Object),0)<0){
                                         printf("ERROR! In socket %d\n",sock_cl);
                                         perror("recv - message");
                                         client[i] = -1;
@@ -313,15 +295,18 @@ int main(int argc, char **argv){
                             printf("------Change password-----------\n");
                             printf("Username: %s\n",obj->change_password.username);
                             printf("New Password: %s\n",obj->change_password.new_password);
-                            User *user_change_pass = user;
+                            List_DB *db_change_pass = root_db;
                             
-                            while(user_change_pass != NULL){
-                                if(strcmp(obj->change_password.username,user_change_pass->signup.username) == 0){
-                                    strcpy(user_change_pass->signup.password,obj->change_password.new_password);
+                            while(db_change_pass != NULL){
+                                if(strcmp(obj->change_password.username,db_change_pass->DB->user.username) == 0){
+                                    strcpy(db_change_pass->DB->user.password,obj->change_password.new_password);
                                     break;
                                 }
-                                user_change_pass = user_change_pass->next;
+                                db_change_pass = db_change_pass->next;
                             }
+                            break;
+                        case SIGNAL_ADD_FRIEND:
+                            
                             break;
                         case SIGNAL_NONE:
                             break;
@@ -334,6 +319,7 @@ int main(int argc, char **argv){
         }
     }while(1);
     puts("server closed!\n");
+    //free_list_db(root_db);
     close(sockfd);
     return 0;
 }
