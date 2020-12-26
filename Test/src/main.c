@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
     widgets->w_lbl_your_bet     = GTK_WIDGET(gtk_builder_get_object(builder, "lbl_your_bet"));
     widgets->w_btn_toss         = GTK_WIDGET(gtk_builder_get_object(builder, "btn_toss"));
     widgets->w_btn_play_again   = GTK_WIDGET(gtk_builder_get_object(builder, "btn_play_again"));
-    
+    gtk_widget_set_name(widgets->w_btn_toss,"Duc");
     gtk_builder_connect_signals(builder, widgets);
     g_object_unref(builder);
     gtk_widget_show(window);
@@ -70,7 +70,8 @@ void on_btn_toss_clicked(GtkButton *button, app_widgets *wdgts)
     // Win and Lose text strings and settings, change label color in GTK here
     gchar str_win[] = "<span foreground='green' weight='bold' font='18'>You Win!</span>";
     gchar str_lose[] = "<span foreground='red' weight='bold' font='18'>You Lose!</span>";
-    
+    g_print("name: %s\nlabel: %s\n",gtk_widget_get_name(wdgts->w_btn_toss),
+        gtk_button_get_label(GTK_BUTTON(wdgts->w_btn_toss)));
     // Toss the coin
     result = g_random_boolean();
     // Set the text to either "Heads" or "Tails" under the "Coin Toss Result:" heading

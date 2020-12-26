@@ -1,5 +1,5 @@
 # change application name here (executable output name)
-TARGET=time
+TARGET=main
 
 # compiler
 CC=gcc
@@ -20,13 +20,13 @@ GTKLIB=`pkg-config --cflags --libs gtk+-3.0`
 LD=gcc
 LDFLAGS=$(PTHREAD) $(GTKLIB) -export-dynamic
 
-OBJS=   time.o
+OBJS=   main.o
 
 all: $(OBJS)
 	$(LD)  $(OBJS) $(LDFLAGS) -o $(TARGET)
 
-time.o: src/time.c
-	$(CC) -c $(CCFLAGS) src/time.c $(GTKLIB) -o time.o
+$(OBJS): src/main.c
+	$(CC) -c $(CCFLAGS) src/main.c $(GTKLIB) -o $(OBJS)
 
 
 clean:
