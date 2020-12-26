@@ -1,0 +1,11 @@
+[
+    {
+        "id": 2,
+        "name": "Anh Nguyen",
+        "username": "anh.nt",
+        "password": "123456",
+        "status": false,
+        "created_at": "1608027267",
+        "is_admin": false
+    }
+]

@@ -29,14 +29,16 @@ OBJ_DATA_PATH = symtab/object_data.c
 OBJ_ERROR_INVALID = error_invalid.o
 OBJ_ERROR_INVALID_PATH = symtab/error_invalid.c
 
+
+
 all: $(OBJS) $(OBJ_DATA) $(OBJ_ERROR_INVALID) server
 	$(LD)  $(OBJS) $(OBJ_DATA) $(OBJ_ERROR_INVALID)  $(LDFLAGS) -o $(TARGET)
 
-server: $(OBJ_SERVER) $(OBJ_DATA) $(OBJ_ERROR_INVALID)
-	$(CC) $(OBJ_SERVER) $(OBJ_DATA) $(OBJ_ERROR_INVALID) -o server
+server: $(OBJ_SERVER_PATH) $(OBJ_DATA) $(OBJ_ERROR_INVALID)
+	$(CC) $(OBJ_SERVER_PATH) -ljson-c  $(OBJ_DATA) $(OBJ_ERROR_INVALID)  -o server
 
-$(OBJ_SERVER): $(OBJ_SERVER_PATH)
-	$(CC) -c $(CCFLAGS) $(OBJ_SERVER_PATH)
+#$(OBJ_SERVER): $(OBJ_SERVER_PATH)
+#	$(CC) -c $(CCFLAGS) $(OBJ_SERVER_PATH)
 
 $(OBJS): $(OBJS_PATH)
 	$(CC) -c $(CCFLAGS) $(OBJS_PATH) $(GTKLIB) -o $(OBJS)

@@ -8,8 +8,9 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include "../symtab/object_data.h"
-//#include "../symtab/error_invalid.h"
-#include "../symtab/database.h"
+#include "../symtab/error_invalid.h"
+// #include "../symtab/database.h"
+#include "jsonapi.h"
 #define QUEUE_MAX 10
 //test
 typedef struct {
@@ -69,7 +70,7 @@ int main(int argc, char **argv){
 
     //test
     Node *root = NULL;
-    List_DB *root_db = NULL;
+    // List_DB *root_db = NULL;
     //
     if(argc != 2){
         printf("Error: sai cu phap\n");
@@ -168,6 +169,7 @@ int main(int argc, char **argv){
                     }                 
                     switch(obj->signal){
                         case SIGNAL_LOGIN:
+                        
                             printf("------------LOGIN-------------\n");
                             {
                                 Node *cur_login = root;
@@ -179,32 +181,31 @@ int main(int argc, char **argv){
                                     cur_login = cur_login->next;
                                 }
                             }
+                            int check_login = -1;
+                             Error err_login;
+                                user_db userdb;
+                                char msg_err_login[100];
                             printf("Account: %s\n",obj->login.username);
                             printf("Password: %s\n\n",obj->login.password);  
                             //check loi
-                            {
-                                List_DB *cur_db = root_db;
-                                bool check_login = false;
-                                Error err_login;
-                                char msg_err_login[100];
-                                while(cur_db != NULL){
-                                    if(strcmp(cur_db->DB->user.username,obj->login.username) == 0){
-                                        check_login = true;
-                                        break;
-                                    }
-                                    cur_db = cur_db->next;
-                                }
-                                if(check_login == true){
-                                    if(strcmp(cur_db->DB->user.password, obj->login.password) != 0){ // sai pass
+                             
+                                check_login = check_user(obj->login.username); 
+            
+                                printf("%d", check_login);
+                              
+                                if(check_login == 1){
+                                    userdb = getUser(obj->login.username);
+                                    if(strcmp(userdb.password, obj->login.password) != 0){ // sai pass
                                         err_login = ERR_CAN_NOT_PASSWORD;
                                     }else{ //dang nhap thanh cong
-                                        if(cur_db->DB->user.login_status == false){
+                                        if(userdb.login_status == 0){
                                             err_login = ERR_NONE;
-                                            cur_db->DB->user.login_status = true;
+                                            userdb.login_status = 1;
                                         }else{
                                             err_login = ERR_USERNAME_LOGIN;
                                         }
                                     }
+
                                 }else{ //sai username
                                     err_login = ERR_NOT_USERNAME;
                                 }
@@ -217,93 +218,93 @@ int main(int argc, char **argv){
                                     close(sock_cl);
                                     continue;
                                 }
-                            }                        
+                                             
                             break;
                         case SIGNAL_SIGNUP:                          
-                            printf("------------SIGNUP-----------\n");
-                            printf("Name: %s\n",obj->signup.name);
-                            printf("Account: %s\n",obj->signup.username);
-                            printf("Password: %s\n",obj->signup.password);
-                            printf("Confirm Password: %s\n\n",obj->signup.re_password);
+                            // printf("------------SIGNUP-----------\n");
+                            // printf("Name: %s\n",obj->signup.name);
+                            // printf("Account: %s\n",obj->signup.username);
+                            // printf("Password: %s\n",obj->signup.password);
+                            // printf("Confirm Password: %s\n\n",obj->signup.re_password);
                      
-                            Data_base *db = (Data_base*)malloc(sizeof(Data_base));
-                            Error err = ERR_NONE;
-                            char msg_err[100];
+                            // //Data_base *db = (Data_base*)malloc(sizeof(Data_base));
+                            // Error err = ERR_NONE;
+                            // char msg_err[100];
                        
-                            strcpy(db->user.name,obj->signup.name);
-                            strcpy(db->user.username,obj->signup.username);
-                            strcpy(db->user.password,obj->signup.password);
-                            db->user.login_status = false;
-                            db->user.is_admin = false;
-                            if(root_db == NULL)
-                                root_db = insert_at_end_db(root_db,db);
-                            else{
-                                List_DB *cur_db = root_db;
-                                bool check = false;
-                                while(cur_db != NULL){
-                                    if(strcmp(obj->signup.username,cur_db->DB->user.username) == 0){
-                                        check = true;
-                                        break;
-                                    }
-                                    cur_db = cur_db->next;
-                                }
-                                if(check == true){
-                                    err = ERR_HAS_USERNAME;
-                                }else{
-                                    root_db = insert_at_end_db(root_db,db);
-                                }
-                            }
-                            error_to_string(err,msg_err);
-                            if(send(sock_cl,msg_err,strlen(msg_err),0) < 0){
-                                printf("ERROR! In socket %d\n",sock_cl);
-                                perror("send - err");
-                                client[i] = -1;
-                                FD_CLR(sock_cl,&masterfds);
-                                close(sock_cl);
-                                continue;
-                            }
+                            // strcpy(db->user.name,obj->signup.name);
+                            // strcpy(db->user.username,obj->signup.username);
+                            // strcpy(db->user.password,obj->signup.password);
+                            // db->user.login_status = false;
+                            // db->user.is_admin = false;
+                            // if(root_db == NULL)
+                            //     root_db = insert_at_end_db(root_db,db);
+                            // else{
+                            //     // List_DB *cur_db = root_db;
+                            //     bool check = false;
+                            //     while(cur_db != NULL){
+                            //         if(strcmp(obj->signup.username,cur_db->DB->user.username) == 0){
+                            //             check = true;
+                            //             break;
+                            //         }
+                            //         cur_db = cur_db->next;
+                            //     }
+                            //     if(check == true){
+                            //         err = ERR_HAS_USERNAME;
+                            //     }else{
+                            //         root_db = insert_at_end_db(root_db,db);
+                            //     }
+                            // }
+                            // error_to_string(err,msg_err);
+                            // if(send(sock_cl,msg_err,strlen(msg_err),0) < 0){
+                            //     printf("ERROR! In socket %d\n",sock_cl);
+                            //     perror("send - err");
+                            //     client[i] = -1;
+                            //     FD_CLR(sock_cl,&masterfds);
+                            //     close(sock_cl);
+                            //     continue;
+                            // }
                             
-                            //obj->signals = SIGNAL_NONE;
+                            // //obj->signals = SIGNAL_NONE;
                             break;
                         case SIGNAL_CHAT_PRIVATE:
                             
-                            printf("%s : %s\n",obj->chat_private.from_username,obj->chat_private.message);
-                            //luu db
+                            // printf("%s : %s\n",obj->chat_private.from_username,obj->chat_private.message);
+                            // //luu db
 
-                            Node *cur_chat = root;
-                            Object *obj_chat_private;
-                            while(cur_chat != NULL){
-                                if(strcmp(cur_chat->element.username,obj->chat_private.from_username) != 0){
-                                    //char message_[250];
-                                    //sprintf(message_,"[%s]:\n%s",obj->chat_private.from_username,obj->chat_private.message);
-                                    obj_chat_private = duplicate_object(obj);
-                                    if(send(cur_chat->element.sockfd,obj_chat_private, 
-                                        sizeof(Object),0)<0){
-                                        printf("ERROR! In socket %d\n",sock_cl);
-                                        perror("recv - message");
-                                        client[i] = -1;
-                                        FD_CLR(sock_cl,&masterfds);
-                                        close(sock_cl);
-                                        return 0;
-                                    }
-                                }
-                                cur_chat = cur_chat->next;
-                            }
+                            // Node *cur_chat = root;
+                            // Object *obj_chat_private;
+                            // while(cur_chat != NULL){
+                            //     if(strcmp(cur_chat->element.username,obj->chat_private.from_username) != 0){
+                            //         //char message_[250];
+                            //         //sprintf(message_,"[%s]:\n%s",obj->chat_private.from_username,obj->chat_private.message);
+                            //         obj_chat_private = duplicate_object(obj);
+                            //         if(send(cur_chat->element.sockfd,obj_chat_private, 
+                            //             sizeof(Object),0)<0){
+                            //             printf("ERROR! In socket %d\n",sock_cl);
+                            //             perror("recv - message");
+                            //             client[i] = -1;
+                            //             FD_CLR(sock_cl,&masterfds);
+                            //             close(sock_cl);
+                            //             return 0;
+                            //         }
+                            //     }
+                            //     cur_chat = cur_chat->next;
+                            // }
                             
                             break;
                         case SIGNAL_CHANGE_PASSWORD:
-                            printf("------Change password-----------\n");
-                            printf("Username: %s\n",obj->change_password.username);
-                            printf("New Password: %s\n",obj->change_password.new_password);
-                            List_DB *db_change_pass = root_db;
+                            // printf("------Change password-----------\n");
+                            // printf("Username: %s\n",obj->change_password.username);
+                            // printf("New Password: %s\n",obj->change_password.new_password);
+                            // // List_DB *db_change_pass = root_db;
                             
-                            while(db_change_pass != NULL){
-                                if(strcmp(obj->change_password.username,db_change_pass->DB->user.username) == 0){
-                                    strcpy(db_change_pass->DB->user.password,obj->change_password.new_password);
-                                    break;
-                                }
-                                db_change_pass = db_change_pass->next;
-                            }
+                            // while(db_change_pass != NULL){
+                            //     if(strcmp(obj->change_password.username,db_change_pass->DB->user.username) == 0){
+                            //         strcpy(db_change_pass->DB->user.password,obj->change_password.new_password);
+                            //         break;
+                            //     }
+                            //     db_change_pass = db_change_pass->next;
+                            // }
                             break;
                         case SIGNAL_ADD_FRIEND:
                             
