@@ -192,7 +192,7 @@ int main(int argc, char **argv){
                                 check_login = check_user(obj->login.username); 
                               
                                 if(check_login == 1){
-                                    userdb = getUser(obj->login.username);
+                                    userdb = getUser(obj->login.username, -1);
                                     if(strcmp(userdb.password, obj->login.password) != 0){ // sai pass
                                         err_login = ERR_CAN_NOT_PASSWORD;
                                     }else{ //dang nhap thanh cong

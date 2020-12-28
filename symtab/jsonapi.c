@@ -102,37 +102,32 @@ void convert_object_to_struct_user(){
 
 }
 
-void convert_object_to_struct_friend(){
+Data_base *getListFriend(char* element){
+	Data_base *database = (Data_base*)malloc(sizeof(Data_base));
 	Friend item;
-	FILE *fp;
-	char buffer[1024];
 	size_t length_eltype;
 	size_t i;	
+	friend_db friend;
 	struct json_object *parsed_json;
 	struct json_object *elementType;
-	fp = fopen("data.json","r");
-	fread(buffer, 1024, 1, fp);
-	fclose(fp);
 
-	parsed_json = json_tokener_parse(buffer);
+	parsed_json = json_tokener_parse(element);
 
 	length_eltype = json_object_array_length(parsed_json);
-	
-
-	for(i=0;i<length_eltype;i++) {
+	database->length_list_friend = length_eltype;
+	if (length_eltype>0){
+		for(i=0;i<length_eltype;i++) {
 		elementType = json_object_array_get_idx(parsed_json, i);
 		json_object_object_get_ex(elementType, "id", &item.id);
 		json_object_object_get_ex(elementType, "friend", &item._friend);
 		json_object_object_get_ex(elementType, "confirm", &item.confirm);
 		json_object_object_get_ex(elementType, "user", &item.user);
-
-        printf("id = %d, friend = %d, confirm = %d, user = %d \n",
-			json_object_get_int(item.id),
-			json_object_get_int(item._friend),
-			json_object_get_boolean(item.confirm),
-			json_object_get_int(item.user));
+		database->list_friend[i] = getFriend(item);
 	}	
+	}
 	
+
+	return database;
 
 }
 
@@ -265,13 +260,13 @@ const char *convert_object_to_json_message(Message elememt){
 	return json_object_to_json_string(Eltype);
 }
 
-friend_db getFriend(Friend friend, User profile){
+friend_db getFriend(Friend friend){
 	friend_db Eltype;
-
-	Eltype.ID = json_object_get_int(friend.user);
-	strcpy(Eltype.name,json_object_get_string(profile.name));
-	Eltype.confirm = json_object_get_boolean(friend.confirm);
-	strcpy(Eltype.username, json_object_get_string(profile.username));
+	user_db profile = getUser(NULL, json_object_get_int(friend._friend)); 
+	Eltype.ID = json_object_get_int(friend._friend); //id friend
+	Eltype.confirm = json_object_get_boolean(friend.confirm); //confirm
+	strcpy(Eltype.name,profile.name);
+	strcpy(Eltype.username, profile.username);
 	return Eltype;
 }
 
@@ -326,34 +321,33 @@ user_db getUserDB(User user){
 	strcpy(Eltype.password, json_object_get_string(user.password));
 	Eltype.is_admin = json_object_get_boolean(user.is_admin);
 	Eltype.login_status = json_object_get_boolean(user.status);
-
 	return Eltype;
 
 }
 
-Data_base getDatabase(user_db user, friend_db *friend, int len_friend, Chat_Private_ *chat_private, 
-						int len_chat_private, group_db *group, int len_group){
+// Data_base getDatabase(user_db user, friend_db *friend, int len_friend, Chat_Private_ *chat_private, 
+// 						int len_chat_private, group_db *group, int len_group){
 		
-		Data_base Eltype;
-		int i;
-		Eltype.signal = DB_NONE;
-		Eltype.user = user;
-		for (i=0;i < len_friend;i++){
-			Eltype.list_friend[i] = friend[i];
-		}
-		for (i=0;i < len_chat_private;i++){
-			Eltype.chat_private[i] = chat_private[i];
-		}
-		for (i=0;i < len_group;i++){
-			Eltype.group[i] = group[i];
-		}
+// 		Data_base Eltype;
+// 		int i;
+// 		Eltype.signal = DB_NONE;
+// 		Eltype.user = user;
+// 		for (i=0;i < len_friend;i++){
+// 			Eltype.list_friend[i] = friend[i];
+// 		}
+// 		for (i=0;i < len_chat_private;i++){
+// 			Eltype.chat_private[i] = chat_private[i];
+// 		}
+// 		for (i=0;i < len_group;i++){
+// 			Eltype.group[i] = group[i];
+// 		}
 
-		Eltype.length_list_friend = len_friend;
-		Eltype.length_chat_private = len_chat_private;
-		Eltype.length_group = len_group;
+// 		Eltype.length_list_friend = len_friend;
+// 		Eltype.length_chat_private = len_chat_private;
+// 		Eltype.length_group = len_group;
 
-		return Eltype;
-}
+// 		return Eltype;
+// }
 
 int check_user(char* username){
 	size_t length_eltype;
@@ -374,16 +368,17 @@ int check_user(char* username){
 	return -1;
 }
 
-user_db getUser(char* username){
+user_db getUser(char* username, int id){
 	User item;
 	char *buffer;
+	char *url = (char*)malloc(200*sizeof(char));
 	size_t length_eltype;
 	size_t i;	
 	struct json_object *parsed_json;
 	struct json_object *elementType;
-	char url[]= "http://127.0.0.1:8000/api/user/?username=";
-	strcat(url,username);
- 	buffer = handle_url(url);
+	if (id == -1){
+		sprintf(url,"http://127.0.0.1:8000/api/user/?username=%s",username);
+		buffer = handle_url(url);
 	if(buffer) {
 	parsed_json = json_tokener_parse(buffer);
 
@@ -402,8 +397,26 @@ user_db getUser(char* username){
 	}
 	     free(buffer);
     }
-
-	return getUserDB(item);
+	}
+	else
+	{
+		sprintf(url,"http://127.0.0.1:8000/api/user/%d/",id);
+		buffer = handle_url(url);
+		if(buffer) {
+		parsed_json = json_tokener_parse(buffer);
+			elementType = json_object_get(parsed_json);
+			json_object_object_get_ex(elementType, "id", &item.id);
+			json_object_object_get_ex(elementType, "name", &item.name);
+			json_object_object_get_ex(elementType, "username", &item.username);
+			json_object_object_get_ex(elementType, "password", &item.password);
+			json_object_object_get_ex(elementType, "status", &item.status);
+			json_object_object_get_ex(elementType, "created_at", &item.created_at);
+			json_object_object_get_ex(elementType, "is_admin", &item.is_admin);
+			return getUserDB(item);
+		
+			free(buffer);
+		}
+	}
 }
 
 void postUser(user_db user){
@@ -440,7 +453,7 @@ void postUser(user_db user){
 
 
 void changePassword(char* username, char* newpassword){
-	user_db user = getUser(username);
+	user_db user = getUser(username,-1);
 	CURL *curl;
 	CURLcode res;
 	long http_code;
@@ -479,7 +492,7 @@ void changePassword(char* username, char* newpassword){
 }
 
 void loginStatus(char* username,int status){
-	user_db user = getUser(username);
+	user_db user = getUser(username,-1);
 	CURL *curl;
 	CURLcode res;
 	long http_code;
@@ -513,32 +526,28 @@ void loginStatus(char* username,int status){
 		}
 	free(url);
 }
-// int main(int argc, char **argv) {
+int main(int argc, char **argv) {
 	
-// 	// convert_object_to_struct_user();
-// 	// convert_object_to_struct_room();
-// 	// convert_object_to_struct_message();
-// 	// convert_object_to_struct_friend();
-// 	User user;
-// 	user.id = json_object_new_int(1);
-// 	user.is_admin = json_object_new_boolean(FALSE);
-// 	user.status = json_object_new_boolean(FALSE);
-// 	user.created_at = json_object_new_string("12121212121");
-// 	user.name = json_object_new_string("Tuan Anh");
-// 	user.username = json_object_new_string("anh.nt");
-// 	user.password = json_object_new_string("1234455");
+	// convert_object_to_struct_user();
+	// convert_object_to_struct_room();
+	// convert_object_to_struct_message();
+	// convert_object_to_struct_friend();
 
-// 	// const char *a = convert_object_to_json_user(user);
-// 	// printf("%s", a);
-// 	// user_db test = getUserDB(user);
-// 	// printf("%s", test.username);
+	size_t i;
+	Data_base *db = (Data_base*)malloc(sizeof(Data_base));
+	char *buffer = (char*)malloc(1000*sizeof(char));
+	char url[]= "http://127.0.0.1:8000/api/friends/?user=10";
+ 	buffer = handle_url(url);
+     if (buffer){
+         db = getListFriend(buffer);
+     }
 	
-// 	user_db userdb;
-// 	int check = check_user("hello");
-// 	if (check==1){
-// 		userdb = getUser("hello");
-// 		printf("%s\n", userdb.username); 
-// 	}
+	printf("%d\n",db->length_list_friend);
+	for (i =0 ; i< db->length_list_friend;i++)
+	{
+		printf("%s \n",db->list_friend[i].username);
+	}
+	free(buffer);
 	
-// 	return 1;
-// }
+	return 1;
+}
