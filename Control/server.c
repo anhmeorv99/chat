@@ -295,9 +295,10 @@ int main(int argc, char **argv){
                             
                             break;
                         case SIGNAL_LOGUOT:
-                            printf("%s",obj->login.username);
+                        {
+                           
                             loginStatus(obj->login.username, 0);
-
+                        }
                         break;
 
                         case SIGNAL_NONE:
