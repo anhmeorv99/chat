@@ -11,6 +11,12 @@ int argc_command;
 char *argv_command;
 int sockfd_menu_chat;
 
+Object *obj_menu_chat;
+
+void dup_obj_menu_chat(Object *obj){
+    obj_menu_chat = duplicate_object(obj);
+}
+
 int menu_chat(int argc, char **argv, int sockfd)
 {
     GtkBuilder      *builder_menu; 
@@ -63,5 +69,11 @@ void on_btn_change_password_clicked(){
 }
 
 void on_btn_logout_clicked(){
+    
+    obj_menu_chat->signal = SIGNAL_LOGUOT;
+    if(send(sockfd_menu_chat,obj_menu_chat,sizeof(Object), 0) < 0){
+        perror("Can't logout");
+        return;
+    }
     gtk_window_close(GTK_WINDOW(window_menu));
 }

@@ -10,7 +10,7 @@
 #include "../symtab/object_data.h"
 #include "../symtab/error_invalid.h"
 // #include "../symtab/database.h"
-#include "jsonapi.h"
+#include "../symtab/jsonapi.h"
 #define QUEUE_MAX 10
 //test
 typedef struct {
@@ -169,7 +169,7 @@ int main(int argc, char **argv){
                     }                 
                     switch(obj->signal){
                         case SIGNAL_LOGIN:
-                        
+                            {
                             printf("------------LOGIN-------------\n");
                             {
                                 Node *cur_login = root;
@@ -182,16 +182,14 @@ int main(int argc, char **argv){
                                 }
                             }
                             int check_login = -1;
-                             Error err_login;
-                                user_db userdb;
-                                char msg_err_login[100];
+                            Error err_login;
+                            user_db userdb;
+                            char msg_err_login[100];
                             printf("Account: %s\n",obj->login.username);
                             printf("Password: %s\n\n",obj->login.password);  
                             //check loi
                              
                                 check_login = check_user(obj->login.username); 
-            
-                                printf("%d", check_login);
                               
                                 if(check_login == 1){
                                     userdb = getUser(obj->login.username);
@@ -200,7 +198,7 @@ int main(int argc, char **argv){
                                     }else{ //dang nhap thanh cong
                                         if(userdb.login_status == 0){
                                             err_login = ERR_NONE;
-                                            userdb.login_status = 1;
+                                            loginStatus(obj->login.username, 1);
                                         }else{
                                             err_login = ERR_USERNAME_LOGIN;
                                         }
@@ -220,52 +218,45 @@ int main(int argc, char **argv){
                                 }
                                              
                             break;
-                        case SIGNAL_SIGNUP:                          
-                            // printf("------------SIGNUP-----------\n");
-                            // printf("Name: %s\n",obj->signup.name);
-                            // printf("Account: %s\n",obj->signup.username);
-                            // printf("Password: %s\n",obj->signup.password);
-                            // printf("Confirm Password: %s\n\n",obj->signup.re_password);
+                            }
+                        case SIGNAL_SIGNUP: 
+                        {                         
+                            printf("------------SIGNUP-----------\n");
+                            printf("Name: %s\n",obj->signup.name);
+                            printf("Account: %s\n",obj->signup.username);
+                            printf("Password: %s\n",obj->signup.password);
+                            printf("Confirm Password: %s\n\n",obj->signup.re_password);
                      
-                            // //Data_base *db = (Data_base*)malloc(sizeof(Data_base));
-                            // Error err = ERR_NONE;
-                            // char msg_err[100];
-                       
-                            // strcpy(db->user.name,obj->signup.name);
-                            // strcpy(db->user.username,obj->signup.username);
-                            // strcpy(db->user.password,obj->signup.password);
-                            // db->user.login_status = false;
-                            // db->user.is_admin = false;
-                            // if(root_db == NULL)
-                            //     root_db = insert_at_end_db(root_db,db);
-                            // else{
-                            //     // List_DB *cur_db = root_db;
-                            //     bool check = false;
-                            //     while(cur_db != NULL){
-                            //         if(strcmp(obj->signup.username,cur_db->DB->user.username) == 0){
-                            //             check = true;
-                            //             break;
-                            //         }
-                            //         cur_db = cur_db->next;
-                            //     }
-                            //     if(check == true){
-                            //         err = ERR_HAS_USERNAME;
-                            //     }else{
-                            //         root_db = insert_at_end_db(root_db,db);
-                            //     }
-                            // }
-                            // error_to_string(err,msg_err);
-                            // if(send(sock_cl,msg_err,strlen(msg_err),0) < 0){
-                            //     printf("ERROR! In socket %d\n",sock_cl);
-                            //     perror("send - err");
-                            //     client[i] = -1;
-                            //     FD_CLR(sock_cl,&masterfds);
-                            //     close(sock_cl);
-                            //     continue;
-                            // }
+                            //Data_base *db = (Data_base*)malloc(sizeof(Data_base));
+                            Error err = ERR_NONE;
+                            char msg_err[100];
+                            user_db user;
+                            strcpy(user.name,obj->signup.name);
+                            strcpy(user.username,obj->signup.username);
+                            strcpy(user.password,obj->signup.password);
+                            user.login_status = 0;
                             
-                            // //obj->signals = SIGNAL_NONE;
+                                // List_DB *cur_db = root_db;
+                            if (check_user(obj->signup.username) == -1){
+                                postUser(user);
+                                err = ERR_NONE;
+                            }else{
+                                err = ERR_HAS_USERNAME;
+                            }
+                            
+                            error_to_string(err,msg_err);
+                            if(send(sock_cl,msg_err,strlen(msg_err),0) < 0){
+                                printf("ERROR! In socket %d\n",sock_cl);
+                                perror("send - err");
+                                client[i] = -1;
+                                FD_CLR(sock_cl,&masterfds);
+                                close(sock_cl);
+                                continue;
+                            }
+                            
+                            //obj->signals = SIGNAL_NONE;
                             break;
+                        }
                         case SIGNAL_CHAT_PRIVATE:
                             
                             // printf("%s : %s\n",obj->chat_private.from_username,obj->chat_private.message);
@@ -293,23 +284,24 @@ int main(int argc, char **argv){
                             
                             break;
                         case SIGNAL_CHANGE_PASSWORD:
-                            // printf("------Change password-----------\n");
-                            // printf("Username: %s\n",obj->change_password.username);
-                            // printf("New Password: %s\n",obj->change_password.new_password);
-                            // // List_DB *db_change_pass = root_db;
-                            
-                            // while(db_change_pass != NULL){
-                            //     if(strcmp(obj->change_password.username,db_change_pass->DB->user.username) == 0){
-                            //         strcpy(db_change_pass->DB->user.password,obj->change_password.new_password);
-                            //         break;
-                            //     }
-                            //     db_change_pass = db_change_pass->next;
-                            // }
+                        {    printf("------Change password-----------\n");
+                            printf("Username: %s\n",obj->change_password.username);
+                            printf("New Password: %s\n",obj->change_password.new_password);
+                            // List_DB *db_change_pass = root_db;
+                            changePassword(obj->change_password.username, obj->change_password.new_password);
                             break;
+                        }
                         case SIGNAL_ADD_FRIEND:
                             
                             break;
+                        case SIGNAL_LOGUOT:
+                            printf("%s",obj->login.username);
+                            loginStatus(obj->login.username, 0);
+
+                        break;
+
                         case SIGNAL_NONE:
+                    
                             break;
                     }
                     free_object(obj);

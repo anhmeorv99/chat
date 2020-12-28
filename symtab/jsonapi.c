@@ -1,5 +1,66 @@
 #include "jsonapi.h"
+#include <curl/curl.h>
 
+
+size_t write_data(void *ptr, size_t size, size_t nmemb, struct url_data *data) {
+    size_t index = data->size;
+    size_t n = (size * nmemb);
+    char* tmp;
+
+    data->size += (size * nmemb);
+
+#ifdef DEBUG
+    fprintf(stderr, "data at %p size=%ld nmemb=%ld\n", ptr, size, nmemb);
+#endif
+    tmp = realloc(data->data, data->size + 1); /* +1 for '\0' */
+
+    if(tmp) {
+        data->data = tmp;
+    } else {
+        if(data->data) {
+            free(data->data);
+        }
+        fprintf(stderr, "Failed to allocate memory.\n");
+        return 0;
+    }
+
+    memcpy((data->data + index), ptr, n);
+    data->data[data->size] = '\0';
+
+    return size * nmemb;
+}
+
+char *handle_url(char* url) {
+    CURL *curl;
+
+    struct url_data data;
+    data.size = 0;
+    data.data = malloc(4096); /* reasonable size initial buffer */
+    if(NULL == data.data) {
+        fprintf(stderr, "Failed to allocate memory.\n");
+        return NULL;
+    }
+
+    data.data[0] = '\0';
+
+    CURLcode res;
+
+    curl = curl_easy_init();
+    if (curl) {
+        curl_easy_setopt(curl, CURLOPT_URL, url);
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &data);
+        res = curl_easy_perform(curl);
+        if(res != CURLE_OK) {
+                fprintf(stderr, "curl_easy_perform() failed: %s\n",  
+                        curl_easy_strerror(res));
+        }
+
+        curl_easy_cleanup(curl);
+
+    }
+    return data.data;
+}
 
 void convert_object_to_struct_user(){
 	User item;
@@ -166,15 +227,11 @@ void convert_object_to_struct_message(){
 }
 
 
-const char *convert_object_to_json_user(User elememt){
-	   struct json_object *Eltype = json_object_new_object();
-	    json_object_object_add(Eltype,"id",elememt.id);
-		json_object_object_add(Eltype,"name",elememt.name);
-	    json_object_object_add(Eltype,"username",elememt.username);
-	    json_object_object_add(Eltype,"password",elememt.password);
-	    json_object_object_add(Eltype,"status",elememt.status);
-	    json_object_object_add(Eltype,"created_at",elememt.created_at);
-	    json_object_object_add(Eltype,"is_admin",elememt.is_admin);
+const char *jsondumpsPassword(char *password){
+	  	User user;
+	    user.password = json_object_new_string(password);
+		struct json_object *Eltype = json_object_new_object();
+		json_object_object_add(Eltype,"password", user.password);
 	return json_object_to_json_string(Eltype);
 }
 
@@ -299,33 +356,35 @@ Data_base getDatabase(user_db user, friend_db *friend, int len_friend, Chat_Priv
 }
 
 int check_user(char* username){
-	FILE *fp;
-	char buffer[1024];
 	size_t length_eltype;
 	struct json_object *parsed_json;
-	fp = fopen("data.json","r");
-	fread(buffer, 1024, 1, fp);
-	fclose(fp);
+	char *buffer;
+	char url[]= "http://127.0.0.1:8000/api/user/?username=";
+	strcat(url,username);
+ 	buffer = handle_url(url);
 
-	parsed_json = json_tokener_parse(buffer);
+    if(buffer) {
+        parsed_json = json_tokener_parse(buffer);
 
-	length_eltype = json_object_array_length(parsed_json);
-	if (length_eltype == 0) return -1;
-	else return 1;
+		length_eltype = json_object_array_length(parsed_json);
+		if (length_eltype == 0) return -1;
+		else return 1;
+        free(buffer);
+    }
+	return -1;
 }
 
 user_db getUser(char* username){
 	User item;
-	FILE *fp;
-	char buffer[1024];
+	char *buffer;
 	size_t length_eltype;
 	size_t i;	
 	struct json_object *parsed_json;
 	struct json_object *elementType;
-	fp = fopen("data.json","r");
-	fread(buffer, 1024, 1, fp);
-	fclose(fp);
-
+	char url[]= "http://127.0.0.1:8000/api/user/?username=";
+	strcat(url,username);
+ 	buffer = handle_url(url);
+	if(buffer) {
 	parsed_json = json_tokener_parse(buffer);
 
 	length_eltype = json_object_array_length(parsed_json);
@@ -341,9 +400,119 @@ user_db getUser(char* username){
 		json_object_object_get_ex(elementType, "is_admin", &item.is_admin);
 		return getUserDB(item);
 	}
+	     free(buffer);
+    }
+
 	return getUserDB(item);
 }
 
+void postUser(user_db user){
+  CURL *curl;
+  CURLcode res;
+ 
+  /* In windows, this will init the winsock stuff */ 
+  curl_global_init(CURL_GLOBAL_ALL);
+ 
+  /* get a curl handle */ 
+  curl = curl_easy_init();
+  if(curl) {
+    /* First set the URL that is about to receive our POST. This URL can
+       just as well be a https:// URL if that is what should receive the
+       data. */ 
+    curl_easy_setopt(curl, CURLOPT_URL, "http://127.0.0.1:8000/api/user/");
+    /* Now specify the POST data */ 
+	char *data = (char*)malloc(200*sizeof(char)); 
+	sprintf(data,"name=%s&username=%s&password=%s",user.name, user.username, user.password);
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data);
+ 
+    /* Perform the request, res will get the return code */ 
+    res = curl_easy_perform(curl);
+    /* Check for errors */ 
+    if(res != CURLE_OK)
+      fprintf(stderr, "curl_easy_perform() failed: %s\n",
+              curl_easy_strerror(res));
+ 
+    /* always cleanup */ 
+    curl_easy_cleanup(curl);
+  }
+  curl_global_cleanup();
+}
+
+
+void changePassword(char* username, char* newpassword){
+	user_db user = getUser(username);
+	CURL *curl;
+	CURLcode res;
+	long http_code;
+	char url[]= "http://127.0.0.1:8000/api/user/";
+	sprintf(url,"%s%d/", url,user.ID_user);
+	char data[100];
+	sprintf(data,"/?password=%s",newpassword);
+	curl = curl_easy_init();
+	curl_global_init(CURL_GLOBAL_ALL);
+
+	if(curl){
+		
+		curl_easy_setopt(curl, CURLOPT_URL, url);
+		curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "PATCH");
+		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data);
+
+
+		//enable to spit out information for debugging
+		//curl_easy_setopt(curl, CURLOPT_VERBOSE,1L); 
+
+		res = curl_easy_perform(curl);
+
+		if (res != CURLE_OK){
+			fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res) );
+		}
+
+		printf("\nget http return code\n");
+		curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
+		printf("http code: %lu\n", http_code );
+
+
+		curl_easy_cleanup(curl);
+		curl_global_cleanup();
+
+		}
+}
+
+void loginStatus(char* username,int status){
+	user_db user = getUser(username);
+	CURL *curl;
+	CURLcode res;
+	long http_code;
+	char *url= (char*)malloc(100*sizeof(char));
+	sprintf(url,"http://127.0.0.1:8000/api/user/%d/?status=%d", user.ID_user, status);
+	curl = curl_easy_init();
+	curl_global_init(CURL_GLOBAL_ALL);
+
+	if(curl){
+		
+		curl_easy_setopt(curl, CURLOPT_URL, url);
+		curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "PATCH");
+
+		//enable to spit out information for debugging
+		//curl_easy_setopt(curl, CURLOPT_VERBOSE,1L); 
+
+		res = curl_easy_perform(curl);
+
+		if (res != CURLE_OK){
+			fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res) );
+		}
+
+		printf("\nget http return code\n");
+		curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
+		printf("http code: %lu\n", http_code );
+
+
+		curl_easy_cleanup(curl);
+		curl_global_cleanup();
+
+		}
+	free(url);
+}
 // int main(int argc, char **argv) {
 	
 // 	// convert_object_to_struct_user();

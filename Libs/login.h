@@ -66,6 +66,7 @@ void on_login_btn_login_clicked(GtkButton *button, login_form *login_in){
     g_stpcpy(object->login.password , g_strdup(gtk_entry_get_text(GTK_ENTRY(login_in->password))));
     dup_obj_login(object, sock_app);
     dup_obj_list_friend(object);
+    dup_obj_menu_chat(object);
     //test
     set_obj_chat_private(object->login.username, sock_app);
     //

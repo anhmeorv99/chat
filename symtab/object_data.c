@@ -63,9 +63,13 @@ Object *duplicate_object(Object *obj){
 		case SIGNAL_ADD_FRIEND:
 			new->signal = obj->signal;
 			break;
+		case SIGNAL_LOGUOT:
+			new->signal = obj->signal;
+			break;
 		case SIGNAL_NONE:
 			new->signal = obj->signal;
 			break;
+		
 	}
 	return new;
 }
