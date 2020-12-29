@@ -63,7 +63,7 @@ typedef struct {
 }member_db;
 
 typedef struct {
-	int ID;
+	// int ID;
 	int id_username;
 	char from_username[30];
 	char from_name[30];
@@ -72,7 +72,7 @@ typedef struct {
 }message_db;
 
 typedef struct {
-	int ID;
+	// int ID; // id nguoi gui
 	char to_username[30];
 	char to_name[30];
 	message_db msg_private[250];
@@ -113,9 +113,9 @@ void convert_object_to_struct_user();
 
 Data_base *getListFriend(char* element);
 
-void convert_object_to_struct_room();
+Data_base * getListRoom();
 
-void convert_object_to_struct_message();
+Data_base *getMessagePrivate(char* element);
 
 
 const char *jsondumpsPassword(char*password);
@@ -129,11 +129,11 @@ friend_db getFriend(Friend friend);
 
 member_db getMember(User profile);
 
-message_db getMessage(Message message, User profile);
+message_db getMessage(Message message, user_db profile);
 
-Chat_Private_ getChatPrivate(message_db message, User profile, int index);
+Chat_Private_ getChatPrivate(message_db message, int index, user_db profile);
 
-group_db getGroupDB(message_db message, member_db member, Room room, int index_member, int index_message);
+group_db getGroupDB(Room room);
 
 user_db getUserDB(User user);
 

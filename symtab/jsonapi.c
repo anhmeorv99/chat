@@ -131,94 +131,98 @@ Data_base *getListFriend(char* element){
 
 }
 
-void convert_object_to_struct_room(){
-	Room item;
-	FILE *fp;
-	char buffer[1024];
+// Data_base *getListRoom(char* element){
+// 	Data_base *database = (Data_base*)malloc(sizeof(Data_base));
+// 	Room item;
+// 	size_t length_eltype, length_member;
+// 	size_t i,j;	
+// 	struct json_object *parsed_json;
+// 	struct json_object *elementType;
+// 	struct json_object *id_member;
+
+// 	parsed_json = json_tokener_parse(element);
+
+// 	length_eltype = json_object_array_length(parsed_json);
+
+// 	for(i=0;i<length_eltype;i++) {
+// 		elementType = json_object_array_get_idx(parsed_json, i);
+// 		json_object_object_get_ex(elementType, "id", &item.id);
+// 		json_object_object_get_ex(elementType, "room_status", &item.room_status);
+// 		json_object_object_get_ex(elementType, "name", &item.name);
+// 		json_object_object_get_ex(elementType, "admin_room", &item.admin_room);
+// 		json_object_object_get_ex(elementType, "member", &item.member);
+//         printf("id = %d, room_status = %s, name = %s, admin_room = %d, ",
+// 			json_object_get_int(item.id),
+// 			json_object_get_string(item.room_status),
+// 			json_object_get_string(item.name),
+// 			json_object_get_int(item.admin_room));
+		
+// 		printf("member = ");
+// 		length_member = json_object_array_length(item.member);
+// 		for(j=0;j<length_member;j++) {
+// 			id_member = json_object_array_get_idx(item.member, j);
+// 			printf("%d, ",json_object_get_int(id_member));
+// 	}	
+// 		printf("\n");
+
+// 	}	
+// }
+
+Data_base *getMessagePrivate(char* element){
+	Data_base *database = (Data_base*)malloc(sizeof(Data_base));
+	Message item, member;
 	size_t length_eltype, length_member;
 	size_t i,j;	
 	struct json_object *parsed_json;
-	struct json_object *elementType;
+	struct json_object *elementType, *profile_from_user;
 	struct json_object *id_member;
-	fp = fopen("data.json","r");
-	fread(buffer, 1024, 1, fp);
-	fclose(fp);
-
-	parsed_json = json_tokener_parse(buffer);
+	user_db profile_recv,profile;
+	message_db msg_db;
+	parsed_json = json_tokener_parse(element);
 
 	length_eltype = json_object_array_length(parsed_json);
+	database->length_chat_private = length_eltype;
+	if (length_eltype>0){
+		profile_from_user = json_object_array_get_idx(parsed_json, 0);
+		json_object_object_get_ex(profile_from_user, "from_user", &member.from_user);
+		json_object_object_get_ex(profile_from_user, "member", &member.member);
 
+		profile = getUser(NULL, json_object_get_int(member.from_user)); 
 
-	for(i=0;i<length_eltype;i++) {
-		elementType = json_object_array_get_idx(parsed_json, i);
-		json_object_object_get_ex(elementType, "id", &item.id);
-		json_object_object_get_ex(elementType, "room_status", &item.room_status);
-		json_object_object_get_ex(elementType, "name", &item.name);
-		json_object_object_get_ex(elementType, "admin_room", &item.admin_room);
-		json_object_object_get_ex(elementType, "member", &item.member);
-        printf("id = %d, room_status = %s, name = %s, admin_room = %d, ",
-			json_object_get_int(item.id),
-			json_object_get_string(item.room_status),
-			json_object_get_string(item.name),
-			json_object_get_int(item.admin_room));
-		
-		printf("member = ");
-		length_member = json_object_array_length(item.member);
-		for(j=0;j<length_member;j++) {
-			id_member = json_object_array_get_idx(item.member, j);
-			printf("%d, ",json_object_get_int(id_member));
-	}	
-		printf("\n");
+		length_member = json_object_array_length(member.member);
+			for(j=0;j<length_member;j++) {
+				id_member = json_object_array_get_idx(member.member, j);
 
-		
-		
-	}	
-}
+				if (json_object_get_int(id_member) != json_object_get_int(member.from_user)){
+					
+					profile_recv = getUser(NULL,json_object_get_int(id_member));
+				}
+			}
+		// GET PROFILE of chat private
 
-void convert_object_to_struct_message(){
-	Message item;
-	FILE *fp;
-	char buffer[1024];
-	size_t length_eltype, length_member;
-	size_t i,j;	
-	struct json_object *parsed_json;
-	struct json_object *elementType;
-	struct json_object *id_member;
-	fp = fopen("data.json","r");
-	fread(buffer, 1024, 1, fp);
-	fclose(fp);
+		for(i=0;i<length_eltype;i++) {
+			elementType = json_object_array_get_idx(parsed_json, i);
+			json_object_object_get_ex(elementType, "id", &item.id);
+			json_object_object_get_ex(elementType, "from_user", &item.from_user);
+			json_object_object_get_ex(elementType, "message", &item.message);
+			json_object_object_get_ex(elementType, "created_at", &item.created_at);
+			json_object_object_get_ex(elementType, "room", &item.room);
+			json_object_object_get_ex(elementType, "member", &item.member);
+			if (json_object_get_int(item.from_user)==profile.ID_user){
+				msg_db = getMessage(item,profile);
+				database->chat_private[i] =  getChatPrivate(msg_db,i,profile_recv);
 
-	parsed_json = json_tokener_parse(buffer);
-
-	length_eltype = json_object_array_length(parsed_json);
+			}else{ 
+				msg_db = getMessage(item,profile_recv);
+				database->chat_private[i] = getChatPrivate(msg_db,i,profile);
+				
+			}
+	}
+	
 	
 
-	for(i=0;i<length_eltype;i++) {
-		elementType = json_object_array_get_idx(parsed_json, i);
-		json_object_object_get_ex(elementType, "id", &item.id);
-		json_object_object_get_ex(elementType, "from_user", &item.from_user);
-		json_object_object_get_ex(elementType, "message", &item.message);
-		json_object_object_get_ex(elementType, "created_at", &item.created_at);
-		json_object_object_get_ex(elementType, "room", &item.room);
-		json_object_object_get_ex(elementType, "member", &item.member);
-        printf("id = %d, from_user = %d, message = %s, created_at = %s, room = %d, ",
-			json_object_get_int(item.id),
-			json_object_get_int(item.from_user),
-			json_object_get_string(item.message),
-			json_object_get_string(item.created_at),
-			json_object_get_int(item.room));
-		
-		printf("member = ");
-		length_member = json_object_array_length(item.member);
-		for(j=0;j<length_member;j++) {
-			id_member = json_object_array_get_idx(item.member, j);
-			printf("%d, ",json_object_get_int(id_member));
 	}	
-		printf("\n");
-
-		
-		
-	}	
+	return database;
 }
 
 
@@ -278,21 +282,21 @@ member_db getMember(User profile){
 	return Eltype;
 }
 
-message_db getMessage(Message message, User profile){
+message_db getMessage(Message message,user_db profile){
 	message_db Eltype;
-	Eltype.ID = json_object_get_int(message.id);
-	strcpy(Eltype.from_username, json_object_get_string(profile.username));
-	strcpy(Eltype.from_name, json_object_get_string(profile.name));
+	Eltype.id_username = profile.ID_user;
+	strcpy(Eltype.from_username, profile.username);
+	strcpy(Eltype.from_name, profile.name);
 	strcpy(Eltype.message, json_object_get_string(message.message));
 	strcpy(Eltype.create_at, json_object_get_string(message.created_at));
 	return Eltype;
 }
 
-Chat_Private_ getChatPrivate(message_db message, User profile, int index){
+Chat_Private_ getChatPrivate(message_db message,int index, user_db profile){
 	Chat_Private_ Eltype;
-	Eltype.ID = message.ID;
-	strcpy(Eltype.to_username, json_object_get_string(profile.username));
-	strcpy(Eltype.to_name, json_object_get_string(profile.name));
+	// Eltype.ID = message.ID;
+	strcpy(Eltype.to_username, profile.username);
+	strcpy(Eltype.to_name, profile.name);
 	
 	Eltype.length_message = index;
 	Eltype.msg_private[index] = message;
@@ -300,15 +304,15 @@ Chat_Private_ getChatPrivate(message_db message, User profile, int index){
 	return Eltype;
 }
 
-group_db getGroupDB(message_db message, member_db member, Room room, int index_member, int index_message){
+group_db getGroupDB(Room room){
 	group_db Eltype;
 	Eltype.ID_group = json_object_get_int(room.id);
 	strcpy(Eltype.name,json_object_get_string(room.name));
 	Eltype.id_admin = json_object_get_int(room.admin_room);
-	Eltype.members[index_member] = member;
-	Eltype.length_member = index_member;
-	Eltype.msg_public[index_message] = message;
-	Eltype.length_msg_public = index_message;
+	// Eltype.members[index_member] = member;
+	// Eltype.length_member = index_member;
+	// Eltype.msg_public[index_message] = message;
+	// Eltype.length_msg_public = index_message;
 
 	return Eltype;
 }
@@ -534,20 +538,31 @@ int main(int argc, char **argv) {
 	// convert_object_to_struct_friend();
 
 	size_t i;
-	Data_base *db = (Data_base*)malloc(sizeof(Data_base));
+	Data_base *db = (Data_base*)malloc(100*sizeof(Data_base));
 	char *buffer = (char*)malloc(1000*sizeof(char));
-	char url[]= "http://127.0.0.1:8000/api/friends/?user=10";
+	char * buffer_friend = (char*)malloc(1000*sizeof(char));
+	char url_friend[] = "http://127.0.0.1:8000/api/friends/?user=1";
+	char url[]= "http://127.0.0.1:8000/api/message/?room_id=2";
  	buffer = handle_url(url);
-     if (buffer){
-         db = getListFriend(buffer);
-     }
-	
-	printf("%d\n",db->length_list_friend);
-	for (i =0 ; i< db->length_list_friend;i++)
-	{
-		printf("%s \n",db->list_friend[i].username);
+	buffer_friend = handle_url(url_friend);
+	if (buffer_friend){
+		db = getListFriend(buffer_friend);
 	}
+	for (i=0;i<db->length_list_friend;i++)
+	{
+		printf("%s \n", db->list_friend[i].name);
+	}
+    //  if (buffer){
+    //      db = getMessagePrivate(buffer);
+    //  }
+	
+	// printf("%d\n",db->length_chat_private);
+	// for (i =0 ; i< db->length_chat_private;i++)
+	// {
+	// 	printf("from %s to %s : %s\n",db->chat_private[i].msg_private[i].from_name,db->chat_private[i].to_name, db->chat_private[i].msg_private[i].message);
+	// }
 	free(buffer);
+	free(db);
 	
 	return 1;
 }
