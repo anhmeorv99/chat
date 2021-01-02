@@ -1,9 +1,9 @@
 
 #include <gtk/gtk.h>
 #include "change_password.h"
-#include "friend_chat_private.h"
+#include "chat_private.h"
 #include "list_group_chat.h"
-#include "menu_list_friend.h"
+
 
 GtkWidget       *window_menu;
 GtkWidget       *window_login;
@@ -49,7 +49,8 @@ void on_menu_chat_destroy()
 }
 
 void on_btn_chat_private_clicked(){
-    friend_chat_private(argc_command,&argv_command);
+    //friend_chat_private(argc_command,&argv_command);
+    chat_private(argc_command, &argv_command);
 }
 
 void on_btn_chat_group_clicked(){

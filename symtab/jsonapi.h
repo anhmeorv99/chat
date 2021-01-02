@@ -44,7 +44,9 @@ typedef struct message {
 
 typedef enum{
 	DB_NONE,
+	SIGNAL_DB_LIST_FRIEND,
 	DB_LIST_FRIEND,
+	SIGNAL_DB_CHAT_PRIVATE,
 	DB_CHAT_PRIVATE,
 	DB_CHAT_PUBLIC
 }Signal_db;
@@ -64,17 +66,16 @@ typedef struct {
 
 typedef struct {
 	// int ID;
-	int id_username;
+	// int id_username;
 	char from_username[30];
+	char to_username[30];
+	char to_name[30];
 	char from_name[30];
 	char message[500];
 	char create_at[50];
 }message_db;
 
 typedef struct {
-	// int ID; // id nguoi gui
-	char to_username[30];
-	char to_name[30];
 	message_db msg_private[250];
 	int length_message;
 }Chat_Private_;
@@ -103,37 +104,33 @@ typedef struct {
 	user_db user;
 	friend_db list_friend[20];
 	int length_list_friend;
-	Chat_Private_ chat_private[1000];
+	Chat_Private_ chat_private;
 	int length_chat_private;
 	group_db group[10];
 	int length_group;
 }Data_base;
 
-void convert_object_to_struct_user();
-
 Data_base *getListFriend(char* element);
 
-Data_base * getListRoom();
+Data_base * getGroup();
 
-Data_base *getMessagePrivate(char* element);
-
-
-const char *jsondumpsPassword(char*password);
-const char *convert_object_to_json_friend(Friend elememt);
-
-const char *convert_object_to_json_room(Room elememt);
-
-const char *convert_object_to_json_message(Message elememt);
+Data_base *getMessagePrivate(int room_id);
 
 friend_db getFriend(Friend friend);
 
-member_db getMember(User profile);
+member_db getMember(int id);
 
-message_db getMessage(Message message, user_db profile);
+message_db getMessage(Message message,user_db from_profile, user_db to_profile);
 
-Chat_Private_ getChatPrivate(message_db message, int index, user_db profile);
+char *convert_struct_to_json_message(int from_user, char* message, int room, int member[], int size);
+void postMessage(char* from_username, char* to_username, char* message);
 
-group_db getGroupDB(Room room);
+// Chat_Private_ getChatPrivate(message_db message, int index);
+
+
+group_db getGroupDB(Room room, member_db member, message_db message, int index_member, int index_message);
+
+int get_id_room_private(char* username1, char* username2);
 
 user_db getUserDB(User user);
 

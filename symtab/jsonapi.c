@@ -62,45 +62,6 @@ char *handle_url(char* url) {
     return data.data;
 }
 
-void convert_object_to_struct_user(){
-	User item;
-	FILE *fp;
-	char buffer[1024];
-	size_t length_eltype;
-	size_t i;	
-	struct json_object *parsed_json;
-	struct json_object *elementType;
-	fp = fopen("data.json","r");
-	fread(buffer, 1024, 1, fp);
-	fclose(fp);
-
-	parsed_json = json_tokener_parse(buffer);
-
-	length_eltype = json_object_array_length(parsed_json);
-	
-
-	for(i=0;i<length_eltype;i++) {
-		elementType = json_object_array_get_idx(parsed_json, i);
-		json_object_object_get_ex(elementType, "id", &item.id);
-		json_object_object_get_ex(elementType, "name", &item.name);
-		json_object_object_get_ex(elementType, "username", &item.username);
-		json_object_object_get_ex(elementType, "password", &item.password);
-		json_object_object_get_ex(elementType, "status", &item.status);
-		json_object_object_get_ex(elementType, "created_at", &item.created_at);
-		json_object_object_get_ex(elementType, "is_admin", &item.is_admin);
-
-        printf("id = %d, name = %s, username = %s, password = %s, status = %d, created_at = %s, is_admin = %d \n",
-			json_object_get_int(item.id),
-			json_object_get_string(item.name),
-			json_object_get_string(item.username),
-			json_object_get_string(item.password),
-			json_object_get_boolean(item.status),
-			json_object_get_string(item.created_at),
-			json_object_get_boolean(item.is_admin));
-	}	
-	
-
-}
 
 Data_base *getListFriend(char* element){
 	Data_base *database = (Data_base*)malloc(sizeof(Data_base));
@@ -131,44 +92,42 @@ Data_base *getListFriend(char* element){
 
 }
 
-// Data_base *getListRoom(char* element){
-// 	Data_base *database = (Data_base*)malloc(sizeof(Data_base));
-// 	Room item;
-// 	size_t length_eltype, length_member;
-// 	size_t i,j;	
-// 	struct json_object *parsed_json;
-// 	struct json_object *elementType;
-// 	struct json_object *id_member;
 
-// 	parsed_json = json_tokener_parse(element);
 
-// 	length_eltype = json_object_array_length(parsed_json);
+friend_db getFriend(Friend friend){
+	friend_db Eltype;
+	user_db profile = getUser(NULL, json_object_get_int(friend._friend)); 
+	Eltype.ID = json_object_get_int(friend._friend); //id friend
+	Eltype.confirm = json_object_get_boolean(friend.confirm); //confirm
+	strcpy(Eltype.name,profile.name);
+	strcpy(Eltype.username, profile.username);
+	return Eltype;
+}
 
-// 	for(i=0;i<length_eltype;i++) {
-// 		elementType = json_object_array_get_idx(parsed_json, i);
-// 		json_object_object_get_ex(elementType, "id", &item.id);
-// 		json_object_object_get_ex(elementType, "room_status", &item.room_status);
-// 		json_object_object_get_ex(elementType, "name", &item.name);
-// 		json_object_object_get_ex(elementType, "admin_room", &item.admin_room);
-// 		json_object_object_get_ex(elementType, "member", &item.member);
-//         printf("id = %d, room_status = %s, name = %s, admin_room = %d, ",
-// 			json_object_get_int(item.id),
-// 			json_object_get_string(item.room_status),
-// 			json_object_get_string(item.name),
-// 			json_object_get_int(item.admin_room));
-		
-// 		printf("member = ");
-// 		length_member = json_object_array_length(item.member);
-// 		for(j=0;j<length_member;j++) {
-// 			id_member = json_object_array_get_idx(item.member, j);
-// 			printf("%d, ",json_object_get_int(id_member));
-// 	}	
-// 		printf("\n");
+member_db getMember(int id){
+	member_db Eltype;
+	user_db profile = getUser(NULL,id);
+	Eltype.ID = profile.ID_user;
+	strcpy(Eltype.name,profile.name);
+	strcpy(Eltype.username,profile.username);
+	return Eltype;
+}
 
-// 	}	
-// }
+message_db getMessage(Message message,user_db from_profile, user_db to_profile){
+	message_db Eltype;
 
-Data_base *getMessagePrivate(char* element){
+	strcpy(Eltype.from_username, from_profile.username);
+	
+	strcpy(Eltype.to_username, to_profile.username);
+	strcpy(Eltype.from_name, from_profile.name);
+	strcpy(Eltype.to_name, to_profile.name);
+	strcpy(Eltype.message, json_object_get_string(message.message));
+	strcpy(Eltype.create_at, json_object_get_string(message.created_at));
+	return Eltype;
+}
+
+Data_base *getMessagePrivate(int room_id)
+{
 	Data_base *database = (Data_base*)malloc(sizeof(Data_base));
 	Message item, member;
 	size_t length_eltype, length_member;
@@ -178,10 +137,16 @@ Data_base *getMessagePrivate(char* element){
 	struct json_object *id_member;
 	user_db profile_recv,profile;
 	message_db msg_db;
+	char* url = (char*)malloc(100*sizeof(char));
+	sprintf(url, "http://127.0.0.1:8000/api/message/?room_id=%d", room_id);
+	// get data
+	char* element = (char*)malloc(100*sizeof(char));
+	element = handle_url(url);
+
 	parsed_json = json_tokener_parse(element);
 
 	length_eltype = json_object_array_length(parsed_json);
-	database->length_chat_private = length_eltype;
+	database->chat_private.length_message = length_eltype;
 	if (length_eltype>0){
 		profile_from_user = json_object_array_get_idx(parsed_json, 0);
 		json_object_object_get_ex(profile_from_user, "from_user", &member.from_user);
@@ -208,114 +173,148 @@ Data_base *getMessagePrivate(char* element){
 			json_object_object_get_ex(elementType, "created_at", &item.created_at);
 			json_object_object_get_ex(elementType, "room", &item.room);
 			json_object_object_get_ex(elementType, "member", &item.member);
-			if (json_object_get_int(item.from_user)==profile.ID_user){
-				msg_db = getMessage(item,profile);
-				database->chat_private[i] =  getChatPrivate(msg_db,i,profile_recv);
-
-			}else{ 
-				msg_db = getMessage(item,profile_recv);
-				database->chat_private[i] = getChatPrivate(msg_db,i,profile);
-				
+			if (profile.ID_user == json_object_get_int(item.from_user)){
+					msg_db = getMessage(item,profile,profile_recv);
+			} else{
+				msg_db = getMessage(item,profile_recv,profile);
 			}
+			
+			database->chat_private.msg_private[i] = msg_db;
 	}
-	
-	
-
 	}	
 	return database;
 }
 
-
-const char *jsondumpsPassword(char *password){
-	  	User user;
-	    user.password = json_object_new_string(password);
-		struct json_object *Eltype = json_object_new_object();
-		json_object_object_add(Eltype,"password", user.password);
-	return json_object_to_json_string(Eltype);
+char *convert_struct_to_json_message(int from_user, char* message, int room, int member[], int size){
+    char *buffer = (char*)malloc(200*sizeof(char));
+    char *id = (char*)malloc(sizeof(char));
+    char *data = (char*)malloc(200*sizeof(char));
+    int i;
+    sprintf(buffer,"[");
+    for (i=0;i<size;i++){
+        if (i==size-1){
+             sprintf(id,"%d]",member[i]);
+             strcat(buffer,id);
+        }else {
+            sprintf(id,"%d, ",member[i]);
+            strcat(buffer,id);
+        }
+      
+    }
+   
+    sprintf(data,"{\"from_user\": %d, \"message\": \"%s\", \"room\": %d, \"member\": %s}", from_user,message,room,buffer);
+    free(buffer);
+    return data;
 }
 
-const char *convert_object_to_json_friend(Friend elememt){
-	   struct json_object *Eltype = json_object_new_object();
-	    json_object_object_add(Eltype,"id",elememt.id);
-		json_object_object_add(Eltype,"friend",elememt._friend);
-	    json_object_object_add(Eltype,"confirm",elememt.confirm);
-	    json_object_object_add(Eltype,"user",elememt.user);
-	return json_object_to_json_string(Eltype);
+void postMessage(char* from_username, char* to_username, char* message){
+     CURL *curl;
+  CURLcode res;
+  user_db from_user = getUser(from_username, -1);
+  user_db to_user = getUser(to_username, -1);
+  int room_id = get_id_room_private(from_username,to_username);
+	char* data = (char*)malloc(200*sizeof(char));
+	sprintf(data,"{\"from_user\":%d, \"message\": \"%s\", \"room\":%d, \"member\":[%d,%d]}",
+	 from_user.ID_user,message,room_id,from_user.ID_user, to_user.ID_user);
+  /* In windows, this will init the winsock stuff */ 
+  curl_global_init(CURL_GLOBAL_ALL);
+ 
+  /* get a curl handle */ 
+  curl = curl_easy_init();
+  if(curl) {
+    struct curl_slist *chunk = NULL; 
+    chunk = curl_slist_append(chunk, "Content-Type: application/json");
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, chunk);
+    
+    curl_easy_setopt(curl, CURLOPT_URL, "http://127.0.0.1:8000/api/message/");
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data);
+    res = curl_easy_perform(curl);
+    if(res != CURLE_OK)
+      fprintf(stderr, "curl_easy_perform() failed: %s\n",
+              curl_easy_strerror(res));
+    curl_easy_cleanup(curl);
+  }
+  curl_global_cleanup();
 }
 
-const char *convert_object_to_json_room(Room elememt){
-	   struct json_object *Eltype = json_object_new_object();
-	    json_object_object_add(Eltype,"id",elememt.id);
-		json_object_object_add(Eltype,"room_status",elememt.room_status);
-	    json_object_object_add(Eltype,"name",elememt.name);
-	    json_object_object_add(Eltype,"admin_room",elememt.admin_room);
-		json_object_object_add(Eltype,"member",elememt.member);
-	return json_object_to_json_string(Eltype);
+
+// Chat_Private_ getChatPrivate(message_db message,int index){
+// 	Chat_Private_ Eltype;
+// 	// Eltype.ID = message.ID;
+// 	Eltype.msg_private[index] = message;
+// 	return Eltype;
+// }
+
+
+int get_id_room_private(char* username1, char* username2){
+	user_db id_user1 = getUser(username1, -1);
+	user_db id_user2 = getUser(username2, -1);
+	struct json_object *parsed_json;
+	struct json_object *elementType;
+	size_t length_eltype,i;
+	Room item;
+	char * url = (char*)malloc(100*sizeof(char));
+	char * buffer = (char*)malloc(100*sizeof(char));
+	sprintf(url, "http://127.0.0.1:8000/api/room/?room_status=1&member=%d,%d", id_user1.ID_user,id_user2.ID_user);
+	buffer = handle_url(url);
+	if (buffer){
+
+	parsed_json = json_tokener_parse(buffer);
+
+	length_eltype = json_object_array_length(parsed_json);
+	if (length_eltype>0){
+		for(i=0;i<length_eltype;i++) {
+			elementType = json_object_array_get_idx(parsed_json, i);
+			json_object_object_get_ex(elementType, "id", &item.id);
+				return json_object_get_int(item.id);
+			}	
+		}
+	}
+	return -1;
 }
 
-const char *convert_object_to_json_message(Message elememt){
-	   struct json_object *Eltype = json_object_new_object();
-	    json_object_object_add(Eltype,"id",elememt.id);
-		json_object_object_add(Eltype,"from_user",elememt.from_user);
-	    json_object_object_add(Eltype,"message",elememt.message);
-	    json_object_object_add(Eltype,"created_at",elememt.created_at);
-		json_object_object_add(Eltype,"room",elememt.room);
-		json_object_object_add(Eltype,"member",elememt.member);
-	return json_object_to_json_string(Eltype);
-}
 
-friend_db getFriend(Friend friend){
-	friend_db Eltype;
-	user_db profile = getUser(NULL, json_object_get_int(friend._friend)); 
-	Eltype.ID = json_object_get_int(friend._friend); //id friend
-	Eltype.confirm = json_object_get_boolean(friend.confirm); //confirm
-	strcpy(Eltype.name,profile.name);
-	strcpy(Eltype.username, profile.username);
-	return Eltype;
-}
+// group_db getGroupDB(Room room, member_db member, message_db message, int index_member, int index_message){
+// 	group_db Eltype;
+// 	Eltype.ID_group = json_object_get_int(room.id);
+// 	strcpy(Eltype.name,json_object_get_string(room.name));
+// 	Eltype.id_admin = json_object_get_int(room.admin_room);
+// 	Eltype.members[index_member] = member;
+// 	Eltype.length_member = index_member;
+// 	Eltype.msg_public[index_message] = message;
+// 	Eltype.length_msg_public = index_message;
+// 	return Eltype;
+// }
 
-member_db getMember(User profile){
-	member_db Eltype;
-	Eltype.ID = json_object_get_int(profile.id);
-	strcpy(Eltype.name,json_object_get_string(profile.name));
-	strcpy(Eltype.username, json_object_get_string(profile.username));
-	return Eltype;
-}
+// Data_base *getGroup(char* element){
+// 	Data_base *database = (Data_base*)malloc(sizeof(Data_base));
+// 	Room item;
+// 	size_t length_eltype, length_member;
+// 	size_t i,j;	
+// 	group_db group;
+// 	member_db member[12];
+// 	message_db message;
+// 	struct json_object *parsed_json;
+// 	struct json_object *elementType;
+// 	struct json_object *id_member;
 
-message_db getMessage(Message message,user_db profile){
-	message_db Eltype;
-	Eltype.id_username = profile.ID_user;
-	strcpy(Eltype.from_username, profile.username);
-	strcpy(Eltype.from_name, profile.name);
-	strcpy(Eltype.message, json_object_get_string(message.message));
-	strcpy(Eltype.create_at, json_object_get_string(message.created_at));
-	return Eltype;
-}
+// 	parsed_json = json_tokener_parse(element);
 
-Chat_Private_ getChatPrivate(message_db message,int index, user_db profile){
-	Chat_Private_ Eltype;
-	// Eltype.ID = message.ID;
-	strcpy(Eltype.to_username, profile.username);
-	strcpy(Eltype.to_name, profile.name);
-	
-	Eltype.length_message = index;
-	Eltype.msg_private[index] = message;
+// 	length_eltype = json_object_array_length(parsed_json);
 
-	return Eltype;
-}
-
-group_db getGroupDB(Room room){
-	group_db Eltype;
-	Eltype.ID_group = json_object_get_int(room.id);
-	strcpy(Eltype.name,json_object_get_string(room.name));
-	Eltype.id_admin = json_object_get_int(room.admin_room);
-	// Eltype.members[index_member] = member;
-	// Eltype.length_member = index_member;
-	// Eltype.msg_public[index_message] = message;
-	// Eltype.length_msg_public = index_message;
-
-	return Eltype;
-}
+// 	for(i=0;i<length_eltype;i++) {
+// 		elementType = json_object_array_get_idx(parsed_json, i);
+// 		json_object_object_get_ex(elementType, "id", &item.id);
+// 		json_object_object_get_ex(elementType, "name", &item.name);
+// 		json_object_object_get_ex(elementType, "admin_room", &item.admin_room);
+// 		json_object_object_get_ex(elementType, "member", &item.member);
+// 		length_member = json_object_array_length(item.member);
+// 		for(j=0;j<length_member;j++) {
+// 			id_member = json_object_array_get_idx(item.member, j);
+// 			member[j] = getMember(id_member);
+// 	}	
+// 	}	
+// }
 
 user_db getUserDB(User user){
 	user_db Eltype;
@@ -530,39 +529,36 @@ void loginStatus(char* username,int status){
 		}
 	free(url);
 }
-int main(int argc, char **argv) {
+// int main(int argc, char **argv) {
 	
-	// convert_object_to_struct_user();
-	// convert_object_to_struct_room();
-	// convert_object_to_struct_message();
-	// convert_object_to_struct_friend();
+// 	// convert_object_to_struct_user();
+// 	// convert_object_to_struct_room();
+// 	// convert_object_to_struct_message();
+// 	// convert_object_to_struct_friend();
 
-	size_t i;
-	Data_base *db = (Data_base*)malloc(100*sizeof(Data_base));
-	char *buffer = (char*)malloc(1000*sizeof(char));
-	char * buffer_friend = (char*)malloc(1000*sizeof(char));
-	char url_friend[] = "http://127.0.0.1:8000/api/friends/?user=1";
-	char url[]= "http://127.0.0.1:8000/api/message/?room_id=2";
- 	buffer = handle_url(url);
-	buffer_friend = handle_url(url_friend);
-	if (buffer_friend){
-		db = getListFriend(buffer_friend);
-	}
-	for (i=0;i<db->length_list_friend;i++)
-	{
-		printf("%s \n", db->list_friend[i].name);
-	}
-    //  if (buffer){
-    //      db = getMessagePrivate(buffer);
-    //  }
+// 	// size_t i;
+// 	// Data_base *db = (Data_base*)malloc(100*sizeof(Data_base));
+// 	// char *buffer = (char*)malloc(1000*sizeof(char));
+// 	// char * buffer_friend = (char*)malloc(1000*sizeof(char));
+// 	// // char url_friend[] = "http://127.0.0.1:8000/api/friends/?user=1";
+// 	// char url[]= "http://127.0.0.1:8000/api/message/?user=1";
+//  	// buffer = handle_url(url);
+// 	// buffer_friend = handle_url(url_friend);
+// 	// if (buffer){
+// 	// 	db = getListRoom(buffer);
+// 	// }
 	
-	// printf("%d\n",db->length_chat_private);
-	// for (i =0 ; i< db->length_chat_private;i++)
-	// {
-	// 	printf("from %s to %s : %s\n",db->chat_private[i].msg_private[i].from_name,db->chat_private[i].to_name, db->chat_private[i].msg_private[i].message);
-	// }
-	free(buffer);
-	free(db);
+//     // db = getMessagePrivate(get_id_room_private("anh.nt","dai.vn1"));
 	
-	return 1;
-}
+// 	// printf("%d\n",db->chat_private.length_message);
+// 	// for (i =0 ; i< db->chat_private.length_message;i++)
+// 	// {
+// 	// 	printf("from %s to %s : %s\n",db->chat_private.msg_private[i].from_name,db->chat_private.msg_private[i].to_name, db->chat_private.msg_private[i].message);
+// 	// }
+// 	// free(buffer);
+// 	// free(db);
+
+// 	postMessage("anh.nt","dai.vn1","nguyen van duc");
+	
+// 	return 1;
+// }

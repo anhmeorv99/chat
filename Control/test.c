@@ -50,6 +50,8 @@ void postMessage(char* data){
   curl_global_cleanup();
 }
 
+
+
 int main(int argc, char const *argv[]){
 
     int from_user=2;

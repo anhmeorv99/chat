@@ -66,6 +66,13 @@ Object *duplicate_object(Object *obj){
 		case SIGNAL_LOGUOT:
 			new->signal = obj->signal;
 			break;
+		case SIGNAL_RECV_LIST_FRIEND:
+			new->signal = obj->signal;
+			break;
+		case SIGNAL_RECV_CHAT_PRIVATE:
+			new->signal = obj->signal;
+			break;
+
 		case SIGNAL_NONE:
 			new->signal = obj->signal;
 			break;

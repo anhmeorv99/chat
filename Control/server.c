@@ -259,30 +259,71 @@ int main(int argc, char **argv){
                         }
                         case SIGNAL_CHAT_PRIVATE:
                             
-                            // printf("%s : %s\n",obj->chat_private.from_username,obj->chat_private.message);
-                            // //luu db
-
-                            // Node *cur_chat = root;
-                            // Object *obj_chat_private;
-                            // while(cur_chat != NULL){
-                            //     if(strcmp(cur_chat->element.username,obj->chat_private.from_username) != 0){
-                            //         //char message_[250];
-                            //         //sprintf(message_,"[%s]:\n%s",obj->chat_private.from_username,obj->chat_private.message);
-                            //         obj_chat_private = duplicate_object(obj);
-                            //         if(send(cur_chat->element.sockfd,obj_chat_private, 
-                            //             sizeof(Object),0)<0){
-                            //             printf("ERROR! In socket %d\n",sock_cl);
-                            //             perror("recv - message");
-                            //             client[i] = -1;
-                            //             FD_CLR(sock_cl,&masterfds);
-                            //             close(sock_cl);
-                            //             return 0;
-                            //         }
-                            //     }
-                            //     cur_chat = cur_chat->next;
-                            // }
+                            printf("%s : %s\n",obj->chat_private.from_username,obj->chat_private.message);
+                            //luu db
+                            postMessage(obj->chat_private.from_username, obj->chat_private.to_username, obj->chat_private.message);
+                            Node *cur_chat = root;
+                            Object *obj_chat_private;
+                            while(cur_chat != NULL){
+                                if(strcmp(cur_chat->element.username,obj->chat_private.to_username) == 0){
+                                    //char message_[250];
+                                    //sprintf(message_,"[%s]:\n%s",obj->chat_private.from_username,obj->chat_private.message);
+                                    obj_chat_private = duplicate_object(obj);
+                                    if(send(cur_chat->element.sockfd,obj_chat_private, 
+                                        sizeof(Object),0)<0){
+                                        printf("ERROR! In socket %d\n",sock_cl);
+                                        perror("recv - message");
+                                        client[i] = -1;
+                                        FD_CLR(sock_cl,&masterfds);
+                                        close(sock_cl);
+                                        return 0;
+                                    }
+                                    break;
+                                }
+                                cur_chat = cur_chat->next;
+                            }
                             
                             break;
+                        case SIGNAL_RECV_CHAT_PRIVATE:
+                        {
+                            Data_base *db_chat_private = (Data_base*)malloc(sizeof(Data_base));
+                            db_chat_private = getMessagePrivate(get_id_room_private(obj->chat_private.from_username, obj->chat_private.to_username));
+                            printf("length = %d ",db_chat_private->length_chat_private);
+                            db_chat_private->signal = SIGNAL_DB_CHAT_PRIVATE;
+                            if(send(sock_cl,db_chat_private, sizeof(Data_base), 0) < 0){
+                                printf("ERROR! In socket %d\n",sock_cl);
+                                perror("recv - message");
+                                client[i] = -1;
+                                FD_CLR(sock_cl,&masterfds);
+                                close(sock_cl);
+                                return 0;
+                            }
+                            break;
+                        }
+                        case SIGNAL_RECV_LIST_FRIEND:
+                        {
+                            Data_base *db_list_friend = (Data_base*)malloc(sizeof(Data_base));
+                            
+                            user_db user = getUser(obj->login.username, -1);
+                            char* url = (char*)malloc(200*sizeof(char));
+                            sprintf(url, "http://127.0.0.1:8000/api/friends/?user=%d", user.ID_user);
+                            char* buffer = handle_url(url);
+                            if (buffer){
+                                db_list_friend =getListFriend(buffer);
+                                db_list_friend->signal = SIGNAL_DB_LIST_FRIEND;
+                            }
+
+                            if(send(sock_cl,db_list_friend,sizeof(Data_base),0) < 0){
+                                printf("ERROR! In socket %d\n",sock_cl);
+                                perror("send recv list friend");
+                                client[i] = -1;
+                                FD_CLR(sock_cl,&masterfds);
+                                close(sock_cl);
+                                continue;
+                            }
+                            break;
+                        }
+
                         case SIGNAL_CHANGE_PASSWORD:
                         {    printf("------Change password-----------\n");
                             printf("Username: %s\n",obj->change_password.username);
