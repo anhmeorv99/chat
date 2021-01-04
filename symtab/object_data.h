@@ -1,5 +1,5 @@
 #include <stdlib.h>
-
+#include "error_invalid.h"
 typedef enum {
 	SIGNAL_NONE,
 	SIGNAL_LOGIN,
@@ -17,7 +17,9 @@ typedef enum {
 typedef struct {
 	int id;
 	char username[30];
+	char name[30];
 	char password[30];
+	Error err;
 }Login;
 
 typedef struct {
@@ -28,9 +30,11 @@ typedef struct {
 }Signup;
 
 typedef struct {
+	char from_name[30];
+	char to_name[30];
+	char from_username[30];
 	int from_id;
 	int to_id;
-	char from_username[30];
 	char to_username[30];
 	char message[200];
 	char create_at[50];

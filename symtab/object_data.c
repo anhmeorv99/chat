@@ -40,8 +40,10 @@ Object *duplicate_object(Object *obj){
 		case SIGNAL_LOGIN:
 			new->signal = obj->signal;
 			new->login.id = obj->login.id;
+			strcpy(new->login.name,obj->login.name);
 			strcpy(new->login.username,obj->login.username);
 			strcpy(new->login.password,obj->login.password);
+			new->login.err = obj->login.err;
 			break;
 		case SIGNAL_SIGNUP:
 			new->signal = obj->signal;
@@ -54,6 +56,8 @@ Object *duplicate_object(Object *obj){
 			new->signal = obj->signal;
 			new->chat_private.from_id = obj->chat_private.from_id;
 			new->chat_private.to_id = obj->chat_private.to_id;
+			strcpy(new->chat_private.from_name, obj->chat_private.from_name);
+			strcpy(new->chat_private.to_name, obj->chat_private.to_name);
 			strcpy(new->chat_private.from_username,obj->chat_private.from_username);
 			strcpy(new->chat_private.to_username,obj->chat_private.to_username);
 			strcpy(new->chat_private.message,obj->chat_private.message);

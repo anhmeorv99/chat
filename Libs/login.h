@@ -64,9 +64,7 @@ void on_login_btn_login_clicked(GtkButton *button, login_form *login_in){
     //const char *format_invalid = "<span foreground='green' weight='bold' font='13'>%s</span>";
     g_stpcpy(object->login.username,g_strdup(gtk_entry_get_text(GTK_ENTRY(login_in->account))));
     g_stpcpy(object->login.password , g_strdup(gtk_entry_get_text(GTK_ENTRY(login_in->password))));
-    dup_obj_login(object, sock_app);
-    dup_obj_list_friend(object);
-    dup_obj_menu_chat(object);
+    
     //test
     set_obj_chat_private(object->login.username, sock_app);
     //
@@ -82,25 +80,24 @@ void on_login_btn_login_clicked(GtkButton *button, login_form *login_in){
         err_password = ERR_NULL_PASSWORD;
     if((err_username == ERR_NONE) && (err_password == ERR_NONE)){
         char msg_err_login[100];
-        Error err_login;
         int recvBytes;
         if(send(sock_app,object,sizeof(Object),0) < 0){
             perror("send - login");
             return;
         }
-        if((recvBytes = recv(sock_app,msg_err_login,sizeof(msg_err_login),0)) < 0){
+        if((recvBytes = recv(sock_app,object,sizeof(Object),0)) < 0){
             perror("recv-login");
             return;
         }
-        msg_err_login[recvBytes] = '\0';
-        err_login = error_to_enum(msg_err_login);
-        if(err_login != ERR_NONE){ // username hoac password sai
+        // msg_err_login[recvBytes] = '\0';
+        error_to_string(object->login.err,msg_err_login);
+        if(object->login.err != ERR_NONE){ // username hoac password sai
             markup_message = g_markup_printf_escaped(format_error,msg_err_login);
-            if(err_login == ERR_NOT_USERNAME){
+            if(object->login.err == ERR_NOT_USERNAME){
                 gtk_widget_set_visible(login_in->lbl_err_username,TRUE);
                 gtk_label_set_markup(GTK_LABEL(login_in->lbl_err_username),markup_message);
             }
-            else if(err_login == ERR_USERNAME_LOGIN){
+            else if(object->login.err == ERR_USERNAME_LOGIN){
                 gtk_widget_set_visible(login_in->lbl_err_username,TRUE);
                 gtk_label_set_markup(GTK_LABEL(login_in->lbl_err_username),markup_message);
             }
@@ -111,6 +108,9 @@ void on_login_btn_login_clicked(GtkButton *button, login_form *login_in){
             g_free(markup_message);
             free_object(object);    
         }else{  // dang nhap thanh cong 
+            dup_obj_login(object, sock_app);
+            dup_obj_list_friend(object);
+            dup_obj_menu_chat(object);
             dup_obj_chat_private(object);          
             free_object(object); 
             //gtk_window_close(GTK_WINDOW(window_login));

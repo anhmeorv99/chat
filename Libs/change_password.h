@@ -1,7 +1,7 @@
 
 #include <gtk/gtk.h>
 #include "../symtab/object_data.h"
-#include "../symtab/error_invalid.h"
+// #include "../symtab/error_invalid.h"
 
 typedef struct {
     GtkWidget *change_pass_username;

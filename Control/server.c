@@ -9,13 +9,14 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include "../symtab/object_data.h"
-#include "../symtab/error_invalid.h"
+// #include "../symtab/error_invalid.h"
 // #include "../symtab/database.h"
 #include "../symtab/jsonapi.h"
 #define QUEUE_MAX 10
 //test
 typedef struct {
     char username[30];
+    int id;
     int sockfd;
 }Elementtype;
 typedef struct Node_ {
@@ -50,7 +51,7 @@ void printList(Node *root){
     }
     Node *cur = root;
     while(cur != NULL){
-        printf("username: %s\tsockID: %d\n",cur->element.username,cur->element.sockfd);
+        printf("id: %d\tusername: %s\tsockID: %d\n",cur->element.id,cur->element.username,cur->element.sockfd);
         cur = cur->next;
     }
     
@@ -172,20 +173,11 @@ int main(int argc, char **argv){
                         case SIGNAL_LOGIN:
                             {
                             printf("------------LOGIN-------------\n");
-                            {
-                                Node *cur_login = root;
-                                while(cur_login != NULL){
-                                    if(cur_login->element.sockfd == sock_cl){
-                                        strcpy(cur_login->element.username, obj->login.username);
-                                        break;
-                                    }
-                                    cur_login = cur_login->next;
-                                }
-                            }
+                            
                             int check_login = -1;
                             Error err_login;
                             user_db userdb;
-                            char msg_err_login[100];
+                            // char msg_err_login[100];
                             printf("Account: %s\n",obj->login.username);
                             printf("Password: %s\n\n",obj->login.password);  
                             //check loi
@@ -200,6 +192,8 @@ int main(int argc, char **argv){
                                         err_login = ERR_CAN_NOT_PASSWORD;
                                     }else{ //dang nhap thanh cong
                                         if(userdb.login_status == 0){
+                                            strcpy(obj->login.name, userdb.name);
+                                            obj->login.id = userdb.ID_user;
                                             err_login = ERR_NONE;
                                             loginStatus(obj->login.username, 1);
                                             sleep(0.3); 
@@ -211,8 +205,21 @@ int main(int argc, char **argv){
                                 }else{ //sai username
                                     err_login = ERR_NOT_USERNAME;
                                 }
-                                error_to_string(err_login,msg_err_login);
-                                if(send(sock_cl,msg_err_login,strlen(msg_err_login),0) < 0){
+                                {
+                                    Node *cur_login = root;
+                                    while(cur_login != NULL){
+                                        if(cur_login->element.sockfd == sock_cl){
+                                            cur_login->element.id = userdb.ID_user;
+                                            strcpy(cur_login->element.username, obj->login.username);
+                                            break;
+                                        }
+                                        cur_login = cur_login->next;
+                                    }
+                                }
+                                printList(root);
+                                obj->login.err = err_login;
+                                // error_to_string(err_login,msg_err_login);
+                                if(send(sock_cl,obj,sizeof(Object),0) < 0){
                                     printf("ERROR! In socket %d\n",sock_cl);
                                     perror("send - msg_err login");
                                     client[i] = -1;
@@ -265,18 +272,18 @@ int main(int argc, char **argv){
                             
                             printf("%s : %s\n",obj->chat_private.from_username,obj->chat_private.message);
                             //luu db
-                            user_db profile, profile_recv;
-                            profile = getUser(obj->chat_private.from_username, -1);
-                            sleep(0.3); 
-                            profile_recv = getUser(obj->chat_private.to_username, -1);
-                            sleep(0.3); 
+                            // user_db  profile_recv;
+                            // profile = getUser(obj->chat_private.from_username, -1);
+                            // sleep(0.3); 
+                            // profile_recv = getUser(obj->chat_private.to_username, -1);
+                            // sleep(0.3); 
                             
-                            postMessage(profile.ID_user, profile_recv.ID_user,obj->chat_private.message);
+                            postMessage(obj->chat_private.from_id, obj->chat_private.to_id,obj->chat_private.message);
                             sleep(0.3); 
                             Node *cur_chat = root;
                             Object *obj_chat_private;
                             while(cur_chat != NULL){
-                                if(strcmp(cur_chat->element.username,obj->chat_private.to_username) == 0){
+                                if(cur_chat->element.id==obj->chat_private.to_id){
                                     //char message_[250];
                                     //sprintf(message_,"[%s]:\n%s",obj->chat_private.from_username,obj->chat_private.message);
                                     obj_chat_private = duplicate_object(obj);
@@ -298,12 +305,12 @@ int main(int argc, char **argv){
                         case SIGNAL_RECV_CHAT_PRIVATE:
                         {
                             Data_base *db_chat_private = (Data_base*)malloc(sizeof(Data_base));
-                            user_db profile, profile_recv;
-                            profile = getUser(obj->chat_private.from_username, -1);
-                            sleep(0.3); 
-                            profile_recv = getUser(obj->chat_private.to_username, -1);
-                            sleep(0.3); 
-                            db_chat_private = getMessagePrivate(profile.ID_user, profile_recv.ID_user);
+                            // user_db  profile_recv;
+                            // profile = getUser(obj->chat_private.from_username, -1);
+                            // sleep(0.3); 
+                            // profile_recv = getUser(obj->chat_private.to_username, -1);
+                            // sleep(0.3); 
+                            db_chat_private = getMessagePrivate(obj->chat_private.from_id, obj->chat_private.to_id);
                             db_chat_private->signal = SIGNAL_DB_CHAT_PRIVATE;
                             if(send(sock_cl,db_chat_private, sizeof(Data_base), 0) < 0){
                                 printf("ERROR! In socket %d\n",sock_cl);
