@@ -37,8 +37,19 @@ void set_obj_chat_private(char *from_username, int sockfd){
     widgets->sock_chat_private = sockfd;
     //object->chat_private->to_username
 }
+
+char * convert_timestamp_to_date(char* timestamp){
+    time_t rawtime = (time_t)atoi(timestamp);
+    struct tm  ts;
+    char  *buf = (char*)malloc(100*sizeof(char));
+                        // Format time, "ddd yyyy-mm-dd hh:mm:ss zzz"
+    ts = *localtime(&rawtime);
+    strftime(buf, 100*sizeof(buf), "%Y-%m-%d %H:%M:%S", &ts);
+    return buf;
+}
+
 void on_btn_list_friend_private(GtkButton *button,app_widgets *widg){
-    const char *format_recv = "<span foreground='blue'><u>%s []:</u></span>" ;
+    const char *format_recv = "<span foreground='blue'><u>%s [%s]:</u></span>" ;
     char *markup_message;
     if(gtk_widget_is_visible(widg->lbl_name_friend) == FALSE){
         gtk_widget_set_visible(widg->lbl_name_friend, TRUE);
@@ -64,14 +75,16 @@ void on_btn_list_friend_private(GtkButton *button,app_widgets *widg){
     }
 
     if(db_recv_chat_private->signal == SIGNAL_DB_CHAT_PRIVATE){
-        
+        gtk_text_buffer_set_text(widg->text_buffer_view, "", -1);
+        // gtk_text_view_set_buffer(widg->txtvw_show, widg->text_buffer_view);
         for (i=0;i < db_recv_chat_private->chat_private.length_message; i++){
             GtkTextIter iter;
             
             if(gtk_text_buffer_get_char_count(gtk_text_view_get_buffer(widg->txtvw_show)) != 0){
                         gtk_text_buffer_insert_at_cursor(widg->text_buffer_view,"\n",-1);
                     }
-                    markup_message = g_markup_printf_escaped(format_recv,db_recv_chat_private->chat_private.msg_private[i].from_name);
+                    markup_message = g_markup_printf_escaped(format_recv,db_recv_chat_private->chat_private.msg_private[i].from_name
+                                    ,convert_timestamp_to_date(db_recv_chat_private->chat_private.msg_private[i].create_at));
                     // markup_message = g_markup_printf_escaped(format_recv,"Tuan Anh");
 
                     //gtk_text_view_get_buffer(widg->text_write)
@@ -79,7 +92,7 @@ void on_btn_list_friend_private(GtkButton *button,app_widgets *widg){
                     gtk_text_buffer_insert_markup(widg->text_buffer_view,&iter,markup_message,-1);
                     gtk_text_buffer_get_end_iter(gtk_text_view_get_buffer(widg->txtvw_show),&iter);
                     gtk_text_buffer_insert(widg->text_buffer_view,&iter,db_recv_chat_private->chat_private.msg_private[i].message,-1);
-                    // gtk_text_buffer_insert(widg->text_buffer_view,&iter,"allo",-1);
+                    
          }
     }
   
@@ -221,6 +234,7 @@ void on_chat_send_clicked(GtkButton *button, app_widgets *widg){
         gtk_text_view_get_buffer(widg->text_write),&start,&end,FALSE));
     strcpy(widg->object_chat->chat_private.from_username,obj_chat_private->login.username);
     strcpy(widg->object_chat->chat_private.to_username, gtk_widget_get_name(widg->lbl_name_friend));
+    
     if(send(widg->sock_chat_private,widg->object_chat,sizeof(Object),0) < 0){
         perror("send - chat private");
         return;

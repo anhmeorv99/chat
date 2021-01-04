@@ -15,6 +15,7 @@ typedef enum {
 }Signals;
 
 typedef struct {
+	int id;
 	char username[30];
 	char password[30];
 }Login;
@@ -27,6 +28,8 @@ typedef struct {
 }Signup;
 
 typedef struct {
+	int from_id;
+	int to_id;
 	char from_username[30];
 	char to_username[30];
 	char message[200];

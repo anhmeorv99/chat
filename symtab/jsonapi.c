@@ -68,7 +68,7 @@ Data_base *getListFriend(char* element){
 	Friend item;
 	size_t length_eltype;
 	size_t i;	
-	friend_db friend;
+	// friend_db friend_;
 	struct json_object *parsed_json;
 	struct json_object *elementType;
 
@@ -126,62 +126,55 @@ message_db getMessage(Message message,user_db from_profile, user_db to_profile){
 	return Eltype;
 }
 
-Data_base *getMessagePrivate(int room_id)
+message_db getOneMessagePrivate(MessagePrivate message,user_db from_profile, user_db to_profile){
+	message_db Eltype;
+	strcpy(Eltype.from_username, from_profile.username);
+	strcpy(Eltype.to_username, to_profile.username);
+	strcpy(Eltype.from_name, from_profile.name);
+	strcpy(Eltype.to_name, to_profile.name);
+	strcpy(Eltype.message, json_object_get_string(message.message));
+	strcpy(Eltype.create_at, json_object_get_string(message.created_at));
+	return Eltype;
+}
+
+Data_base *getMessagePrivate(int from_user, int to_user)
 {
 	Data_base *database = (Data_base*)malloc(sizeof(Data_base));
-	Message item, member;
-	size_t length_eltype, length_member;
-	size_t i,j;	
+	MessagePrivate item;
+	size_t length_eltype;
+	size_t i;	
 	struct json_object *parsed_json;
-	struct json_object *elementType, *profile_from_user;
-	struct json_object *id_member;
+	struct json_object *elementType;
 	user_db profile_recv,profile;
 	message_db msg_db;
+
+	profile = getUser(NULL, from_user);
+	profile_recv = getUser(NULL, to_user);
 	char* url = (char*)malloc(100*sizeof(char));
-	sprintf(url, "http://127.0.0.1:8000/api/message/?room_id=%d", room_id);
+	sprintf(url, "http://127.0.0.1:8000/api/private/?from_user=%d&to_user=%d", from_user, to_user);
 	// get data
 	char* element = (char*)malloc(100*sizeof(char));
 	element = handle_url(url);
-
+	
 	parsed_json = json_tokener_parse(element);
 
 	length_eltype = json_object_array_length(parsed_json);
-	database->chat_private.length_message = length_eltype;
-	if (length_eltype>0){
-		profile_from_user = json_object_array_get_idx(parsed_json, 0);
-		json_object_object_get_ex(profile_from_user, "from_user", &member.from_user);
-		json_object_object_get_ex(profile_from_user, "member", &member.member);
-
-		profile = getUser(NULL, json_object_get_int(member.from_user)); 
-
-		length_member = json_object_array_length(member.member);
-			for(j=0;j<length_member;j++) {
-				id_member = json_object_array_get_idx(member.member, j);
-
-				if (json_object_get_int(id_member) != json_object_get_int(member.from_user)){
-					
-					profile_recv = getUser(NULL,json_object_get_int(id_member));
-				}
-			}
-		// GET PROFILE of chat private
-
+	database->chat_private.length_message =length_eltype;
 		for(i=0;i<length_eltype;i++) {
 			elementType = json_object_array_get_idx(parsed_json, i);
-			json_object_object_get_ex(elementType, "id", &item.id);
 			json_object_object_get_ex(elementType, "from_user", &item.from_user);
 			json_object_object_get_ex(elementType, "message", &item.message);
 			json_object_object_get_ex(elementType, "created_at", &item.created_at);
-			json_object_object_get_ex(elementType, "room", &item.room);
-			json_object_object_get_ex(elementType, "member", &item.member);
+			json_object_object_get_ex(elementType, "to_user", &item.to_user);
 			if (profile.ID_user == json_object_get_int(item.from_user)){
-					msg_db = getMessage(item,profile,profile_recv);
+					msg_db = getOneMessagePrivate(item, profile, profile_recv);
 			} else{
-				msg_db = getMessage(item,profile_recv,profile);
+				msg_db = getOneMessagePrivate(item, profile_recv ,profile);
 			}
 			
 			database->chat_private.msg_private[i] = msg_db;
 	}
-	}	
+	
 	return database;
 }
 
@@ -207,15 +200,12 @@ char *convert_struct_to_json_message(int from_user, char* message, int room, int
     return data;
 }
 
-void postMessage(char* from_username, char* to_username, char* message){
+void postMessage(int from_user, int to_user, char* message){
      CURL *curl;
-  CURLcode res;
-  user_db from_user = getUser(from_username, -1);
-  user_db to_user = getUser(to_username, -1);
-  int room_id = get_id_room_private(from_username,to_username);
+     CURLcode res;
 	char* data = (char*)malloc(200*sizeof(char));
-	sprintf(data,"{\"from_user\":%d, \"message\": \"%s\", \"room\":%d, \"member\":[%d,%d]}",
-	 from_user.ID_user,message,room_id,from_user.ID_user, to_user.ID_user);
+	sprintf(data,"{\"from_user\":%d, \"message\": \"%s\", \"to_user\":%d}",
+	 from_user,message,to_user);
   /* In windows, this will init the winsock stuff */ 
   curl_global_init(CURL_GLOBAL_ALL);
  
@@ -226,7 +216,7 @@ void postMessage(char* from_username, char* to_username, char* message){
     chunk = curl_slist_append(chunk, "Content-Type: application/json");
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, chunk);
     
-    curl_easy_setopt(curl, CURLOPT_URL, "http://127.0.0.1:8000/api/message/");
+    curl_easy_setopt(curl, CURLOPT_URL, "http://127.0.0.1:8000/api/private/");
     curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data);
     res = curl_easy_perform(curl);
     if(res != CURLE_OK)
@@ -531,34 +521,34 @@ void loginStatus(char* username,int status){
 }
 // int main(int argc, char **argv) {
 	
-// 	// convert_object_to_struct_user();
-// 	// convert_object_to_struct_room();
-// 	// convert_object_to_struct_message();
-// 	// convert_object_to_struct_friend();
+	// convert_object_to_struct_user();
+	// convert_object_to_struct_room();
+	// convert_object_to_struct_message();
+	// convert_object_to_struct_friend();
 
-// 	// size_t i;
-// 	// Data_base *db = (Data_base*)malloc(100*sizeof(Data_base));
-// 	// char *buffer = (char*)malloc(1000*sizeof(char));
-// 	// char * buffer_friend = (char*)malloc(1000*sizeof(char));
-// 	// // char url_friend[] = "http://127.0.0.1:8000/api/friends/?user=1";
-// 	// char url[]= "http://127.0.0.1:8000/api/message/?user=1";
-//  	// buffer = handle_url(url);
-// 	// buffer_friend = handle_url(url_friend);
-// 	// if (buffer){
-// 	// 	db = getListRoom(buffer);
-// 	// }
+	// size_t i;
+	// Data_base *db = (Data_base*)malloc(100*sizeof(Data_base));
+	// char *buffer = (char*)malloc(1000*sizeof(char));
+	// char * buffer_friend = (char*)malloc(1000*sizeof(char));
+	// // char url_friend[] = "http://127.0.0.1:8000/api/friends/?user=1";
+	// char url[]= "http://127.0.0.1:8000/api/message/?user=1";
+ 	// buffer = handle_url(url);
+	// buffer_friend = handle_url(url_friend);
+	// if (buffer){
+	// 	db = getListRoom(buffer);
+	// }
 	
-//     // db = getMessagePrivate(get_id_room_private("anh.nt","dai.vn1"));
+    // db = getMessagePrivate(1,2);
 	
-// 	// printf("%d\n",db->chat_private.length_message);
-// 	// for (i =0 ; i< db->chat_private.length_message;i++)
-// 	// {
-// 	// 	printf("from %s to %s : %s\n",db->chat_private.msg_private[i].from_name,db->chat_private.msg_private[i].to_name, db->chat_private.msg_private[i].message);
-// 	// }
-// 	// free(buffer);
-// 	// free(db);
+	// printf("%d\n",db->chat_private.length_message);
+	// for (i =0 ; i< db->chat_private.length_message;i++)
+	// {
+	// 	printf("from %s to %s : %s\n",db->chat_private.msg_private[i].from_name,db->chat_private.msg_private[i].to_name, db->chat_private.msg_private[i].message);
+	// }
+	// // free(buffer);
+	// free(db);
 
-// 	postMessage("anh.nt","dai.vn1","nguyen van duc");
+	// postMessage(1,2,"Day la test");
 	
-// 	return 1;
+	// return 1;
 // }

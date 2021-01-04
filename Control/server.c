@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/select.h>
@@ -190,15 +191,18 @@ int main(int argc, char **argv){
                             //check loi
                              
                                 check_login = check_user(obj->login.username); 
+                                 sleep(0.3); 
                               
                                 if(check_login == 1){
                                     userdb = getUser(obj->login.username, -1);
+                                    sleep(0.3); 
                                     if(strcmp(userdb.password, obj->login.password) != 0){ // sai pass
                                         err_login = ERR_CAN_NOT_PASSWORD;
                                     }else{ //dang nhap thanh cong
                                         if(userdb.login_status == 0){
                                             err_login = ERR_NONE;
                                             loginStatus(obj->login.username, 1);
+                                            sleep(0.3); 
                                         }else{
                                             err_login = ERR_USERNAME_LOGIN;
                                         }
@@ -261,7 +265,14 @@ int main(int argc, char **argv){
                             
                             printf("%s : %s\n",obj->chat_private.from_username,obj->chat_private.message);
                             //luu db
-                            postMessage(obj->chat_private.from_username, obj->chat_private.to_username, obj->chat_private.message);
+                            user_db profile, profile_recv;
+                            profile = getUser(obj->chat_private.from_username, -1);
+                            sleep(0.3); 
+                            profile_recv = getUser(obj->chat_private.to_username, -1);
+                            sleep(0.3); 
+                            
+                            postMessage(profile.ID_user, profile_recv.ID_user,obj->chat_private.message);
+                            sleep(0.3); 
                             Node *cur_chat = root;
                             Object *obj_chat_private;
                             while(cur_chat != NULL){
@@ -287,8 +298,12 @@ int main(int argc, char **argv){
                         case SIGNAL_RECV_CHAT_PRIVATE:
                         {
                             Data_base *db_chat_private = (Data_base*)malloc(sizeof(Data_base));
-                            db_chat_private = getMessagePrivate(get_id_room_private(obj->chat_private.from_username, obj->chat_private.to_username));
-                            printf("length = %d ",db_chat_private->length_chat_private);
+                            user_db profile, profile_recv;
+                            profile = getUser(obj->chat_private.from_username, -1);
+                            sleep(0.3); 
+                            profile_recv = getUser(obj->chat_private.to_username, -1);
+                            sleep(0.3); 
+                            db_chat_private = getMessagePrivate(profile.ID_user, profile_recv.ID_user);
                             db_chat_private->signal = SIGNAL_DB_CHAT_PRIVATE;
                             if(send(sock_cl,db_chat_private, sizeof(Data_base), 0) < 0){
                                 printf("ERROR! In socket %d\n",sock_cl);
@@ -305,11 +320,13 @@ int main(int argc, char **argv){
                             Data_base *db_list_friend = (Data_base*)malloc(sizeof(Data_base));
                             
                             user_db user = getUser(obj->login.username, -1);
+                            sleep(0.3); 
                             char* url = (char*)malloc(200*sizeof(char));
                             sprintf(url, "http://127.0.0.1:8000/api/friends/?user=%d", user.ID_user);
                             char* buffer = handle_url(url);
                             if (buffer){
                                 db_list_friend =getListFriend(buffer);
+                                sleep(0.3); 
                                 db_list_friend->signal = SIGNAL_DB_LIST_FRIEND;
                             }
 
@@ -330,6 +347,7 @@ int main(int argc, char **argv){
                             printf("New Password: %s\n",obj->change_password.new_password);
                             // List_DB *db_change_pass = root_db;
                             changePassword(obj->change_password.username, obj->change_password.new_password);
+                            sleep(0.3); 
                             break;
                         }
                         case SIGNAL_ADD_FRIEND:
@@ -339,6 +357,7 @@ int main(int argc, char **argv){
                         {
                            
                             loginStatus(obj->login.username, 0);
+                            sleep(0.3); 
                         }
                         break;
 

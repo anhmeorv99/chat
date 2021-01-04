@@ -151,6 +151,7 @@
                     <property name="width_request">250</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
+                    <property name="input_purpose">password</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>

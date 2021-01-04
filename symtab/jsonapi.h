@@ -34,13 +34,18 @@ typedef struct room {
 } Room;
 
 typedef struct message {
-	struct json_object *id;
 	struct json_object *from_user;
  	struct json_object *message;
   	struct json_object *created_at; 
   	struct json_object *room;
-	struct json_object *member;
 } Message;
+
+typedef struct messageprivate {
+	struct json_object *from_user;
+ 	struct json_object *message;
+  	struct json_object *created_at; 
+  	struct json_object *to_user;
+} MessagePrivate;
 
 typedef enum{
 	DB_NONE,
@@ -65,8 +70,8 @@ typedef struct {
 }member_db;
 
 typedef struct {
-	// int ID;
-	// int id_username;
+	int from_id;
+	int to_id;
 	char from_username[30];
 	char to_username[30];
 	char to_name[30];
@@ -114,16 +119,17 @@ Data_base *getListFriend(char* element);
 
 Data_base * getGroup();
 
-Data_base *getMessagePrivate(int room_id);
+Data_base *getMessagePrivate(int from_user, int to_user);
 
 friend_db getFriend(Friend friend);
 
 member_db getMember(int id);
 
 message_db getMessage(Message message,user_db from_profile, user_db to_profile);
+message_db getOneMessagePrivate(MessagePrivate message,user_db from_profile, user_db to_profile);
 
 char *convert_struct_to_json_message(int from_user, char* message, int room, int member[], int size);
-void postMessage(char* from_username, char* to_username, char* message);
+void postMessage(int from_user, int to_user, char* message);
 
 // Chat_Private_ getChatPrivate(message_db message, int index);
 
