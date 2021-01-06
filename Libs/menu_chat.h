@@ -1,7 +1,7 @@
 
 #include <gtk/gtk.h>
 #include "change_password.h"
-#include "chat_private.h"
+
 #include "list_group_chat.h"
 
 
@@ -44,32 +44,35 @@ int menu_chat(int argc, char **argv, int sockfd)
 // called when window is closed
 void on_menu_chat_destroy()
 {
-    if (gtk_window_activate_focus(GTK_WINDOW(window_chat))){
-        gtk_window_close(GTK_WINDOW(window_chat));
-   }
-    if (gtk_window_activate_focus(GTK_WINDOW(window_change_pass))){
+//     if (gtk_window_activate_focus(GTK_WINDOW(window_chat))){
+//         gtk_window_close(GTK_WINDOW(window_chat));
+//    }
+//     if (gtk_window_activate_focus(GTK_WINDOW(window_change_pass))){
 
-        gtk_window_close(GTK_WINDOW(window_change_pass));
-    }
-    if (gtk_window_activate_focus(GTK_WINDOW(window_menu_friend))){
-        gtk_window_close(GTK_WINDOW(window_menu_friend));
-    }
+//         gtk_window_close(GTK_WINDOW(window_change_pass));
+//     }
+//     if (gtk_window_activate_focus(GTK_WINDOW(window_menu_friend))){
+//         gtk_window_close(GTK_WINDOW(window_menu_friend));
+//     }
    
-    gtk_main_quit();
+    
     obj_menu_chat->signal = SIGNAL_LOGUOT;
     if(send(sockfd_menu_chat,obj_menu_chat,sizeof(Object), 0) < 0){
         perror("Can't logout");
         return;
     }
+    gtk_main_quit();
     gtk_widget_set_visible(window_login,TRUE);
     
 }
 
 void on_btn_chat_private_clicked(){
+  
     //friend_chat_private(argc_command,&argv_command);
-    if (gtk_window_activate_focus(GTK_WINDOW(window_chat)) == FALSE){
-        chat_private(argc_command, &argv_command);
-   }
+    // if (gtk_window_activate_focus(GTK_WINDOW(window_chat)) == FALSE){
+        chat_private(argc_command, &argv_command,sockfd_menu_chat);
+        
+//    }
     
 }
 

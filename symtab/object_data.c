@@ -67,6 +67,20 @@ Object *duplicate_object(Object *obj){
 			new->signal = obj->signal;
 			strcpy(new->change_password.username, obj->change_password.username);
 			strcpy(new->change_password.new_password, obj->change_password.new_password);
+		case SIGNAL_CHAT_GROUP:
+			new->signal = obj->signal;
+			new->chat_group.ID_Room = obj->chat_group.ID_Room;
+			new->chat_group.from_id = obj->chat_group.from_id;
+			new->chat_group.length_to_member = obj->chat_group.length_to_member;
+			strcpy(new->chat_group.from_name,obj->chat_group.from_name);
+			strcpy(new->chat_group.message, obj->chat_group.message);
+			if(obj->chat_group.length_to_member > 0){
+				int i;
+				for(i = 0; i < obj->chat_group.length_to_member; i++){
+					new->chat_group.to_id_member[i] = obj->chat_group.to_id_member[i];
+				}
+			}
+			break;
 		case SIGNAL_ADD_FRIEND:
 			new->signal = obj->signal;
 			break;
@@ -76,10 +90,16 @@ Object *duplicate_object(Object *obj){
 		case SIGNAL_RECV_LIST_FRIEND:
 			new->signal = obj->signal;
 			break;
+		case SIGNAL_RECV_LIST_FRIEND_PRIVATE:
+			new->signal = obj->signal;
+			break;
 		case SIGNAL_RECV_CHAT_PRIVATE:
 			new->signal = obj->signal;
 			break;
-
+		
+		case SIGNAL_RECV_LIST_GROUP:
+			new->signal = obj->signal;
+			break;
 		case SIGNAL_NONE:
 			new->signal = obj->signal;
 			break;
