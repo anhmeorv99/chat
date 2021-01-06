@@ -1,21 +1,133 @@
 #include <gtk/gtk.h>
-int chat_group(int argc, char **argv)
+#include "chat_private.h"
+
+typedef struct {
+    GtkWidget *btn_member[15];
+    GtkWidget *scrol_member;
+    GtkWidget *grid_member;
+    GtkTextView *text_view_show;
+    GtkTextView *text_view_send;
+    GtkTextBuffer *text_buff_show;
+    
+}w_chat_group;
+Data_base *db_list_group;
+Object *obj_list_group;
+int sockfd_chat_group;
+int id_room;
+void dup_login_list_group(Object *obj){
+    obj_list_group = duplicate_object(obj);
+}
+
+
+
+void recv_chat_group(void *app){
+    const char *format_recv = "<span foreground='blue'><u>%s [%s]:</u></span>" ;
+    char *markup_message;
+    w_chat_group *widg = (w_chat_group*)app;
+    Object *obj = (Object*)malloc(sizeof(Object));
+    int recv_chat;
+
+    while(1){
+            GtkTextIter iter;
+            recv_chat = recv(sockfd_chat_group,obj,sizeof(Object),0);
+            if(recv_chat < 0 ) break;
+     
+   
+                if (obj->signal == SIGNAL_CHAT_GROUP)
+                {
+                    if(obj->chat_group.ID_Room == id_room){
+                        if(gtk_text_buffer_get_char_count(gtk_text_view_get_buffer(widg->text_view_show)) != 0){
+                            gtk_text_buffer_insert_at_cursor(widg->text_buff_show,"\n",-1);
+                        }
+                        markup_message = g_markup_printf_escaped(format_recv,obj->chat_group.from_name,
+                            obj->chat_group.created_at);
+                        
+                        gtk_text_buffer_get_end_iter(gtk_text_view_get_buffer(widg->text_view_show),&iter);
+                        gtk_text_buffer_insert_markup(widg->text_buff_show,&iter,markup_message,-1);
+                        gtk_text_buffer_get_end_iter(gtk_text_view_get_buffer(widg->text_view_show),&iter);
+                        gtk_text_buffer_insert(widg->text_buff_show,&iter,obj->chat_group.message,-1); 
+                    }
+                    
+                }
+                        
+    }
+    
+}
+
+
+int chat_group(int argc, char **argv,int sockfd,int id)
 {
+    int i;
     GtkBuilder      *builder_chat_group; 
     GtkWidget       *window_chat_group;
 
-  
-
+    w_chat_group *chat_group_ = g_slice_new(w_chat_group);
+    id_room = id;
+    sockfd_chat_group = sockfd;
     gtk_init(&argc, &argv);
 
     builder_chat_group = gtk_builder_new();
     gtk_builder_add_from_file (builder_chat_group, "Glade/list_group_chat.glade", NULL);
 
     window_chat_group = GTK_WIDGET(gtk_builder_get_object(builder_chat_group, "chat_group"));
-    
+    chat_group_->scrol_member = GTK_WIDGET(gtk_builder_get_object(builder_chat_group,"scrol_member"));
+    chat_group_->grid_member = GTK_WIDGET(gtk_builder_get_object(builder_chat_group,"grid_member"));
+    chat_group_->text_buff_show = GTK_TEXT_BUFFER(gtk_builder_get_object(builder_chat_group,"text_buffer_chat_group"));
+    chat_group_->text_view_show = GTK_TEXT_VIEW(gtk_builder_get_object(builder_chat_group,"text_view_chat_group"));
+    chat_group_->text_view_send =  GTK_TEXT_VIEW(gtk_builder_get_object(builder_chat_group,"text_view_send"));
     //////////
-    gtk_builder_connect_signals(builder_chat_group, NULL);
+    gtk_builder_connect_signals(builder_chat_group, chat_group_);
    
+    
+    for(i = 0; i < db_list_group->list_group.length_group; i++){
+        if (db_list_group->list_group.group[i].ID_group == id){
+                int row;
+            
+                for(row = 0; row < db_list_group->list_group.group[i].length_member; row++){
+                    
+                        chat_group_->btn_member[row] = gtk_button_new_with_label(db_list_group->list_group.group[i].members[row].name);
+                        // sprintf(id, "%d", db_list_group->list_group.group[i].ID_group);
+                        // gtk_widget_set_name(list_group->btn_group[i], id);
+                        // g_signal_connect(list_group->btn_group[i],"clicked",G_CALLBACK(on_btn_group),NULL);
+                        gtk_grid_insert_row(GTK_GRID(chat_group_->grid_member),row);
+                        gtk_grid_attach(GTK_GRID(chat_group_->grid_member),chat_group_->btn_member[row],1,row,1,1);
+                    
+                }
+                const char *format_recv = "<span foreground='blue'><u>%s [%s]:</u></span>" ;
+                const char *format_send = "<span foreground='red'><u>%s [%s]:</u></span>" ;
+                char *markup_message;
+                
+                for(row = 0; row < db_list_group->list_group.group[i].length_msg_public; row++){
+                    GtkTextIter iter;
+                    if(gtk_text_buffer_get_char_count(gtk_text_view_get_buffer(chat_group_->text_view_show)) != 0){
+                        gtk_text_buffer_insert_at_cursor(chat_group_->text_buff_show,"\n",-1);
+                    }
+                    if(obj_list_group->login.id == db_list_group->list_group.group[i].msg_public[row].from_id){
+                        markup_message = g_markup_printf_escaped(format_send,db_list_group->list_group.group[i].msg_public[row].from_name
+                                    ,convert_timestamp_to_date(db_list_group->list_group.group[i].msg_public[row].create_at));
+                    }else{
+                        markup_message = g_markup_printf_escaped(format_recv,db_list_group->list_group.group[i].msg_public[row].from_name
+                                    ,convert_timestamp_to_date(db_list_group->list_group.group[i].msg_public[row].create_at));
+                    }
+                    gtk_text_buffer_get_end_iter(gtk_text_view_get_buffer(chat_group_->text_view_show),&iter);
+                    gtk_text_buffer_insert_markup(chat_group_->text_buff_show,&iter,markup_message,-1);
+
+                    gtk_text_buffer_get_end_iter(gtk_text_view_get_buffer(chat_group_->text_view_show),&iter);
+                    gtk_text_buffer_insert(chat_group_->text_buff_show,&iter,db_list_group->list_group.group[i].msg_public[row].message,-1);
+                }
+
+                break;
+                //if(gtk_widget_is_visible(list_friends->scrol_list_friend)){
+                    // gtk_widget_show_all(chat_group_->scrol_member);
+        }
+    }
+    pthread_t id_chat_group_ok;
+    if(pthread_create(&id_chat_group_ok,NULL, (void *)recv_chat_group,(void *)chat_group_) != 0){
+        perror("Create pthread error!\n");
+        exit(EXIT_FAILURE);
+    }
+
+
     g_object_unref(builder_chat_group);
     
     // start 1 second timer
@@ -26,8 +138,8 @@ int chat_group(int argc, char **argv)
     //gtk_widget_set_visible(widgets->scrol_list_friend,FALSE);   
            
     gtk_main();
-
-
+    pthread_cancel(id_chat_group_ok);
+    g_slice_free(w_chat_group,chat_group_);
     return 0;
 }
 
@@ -35,4 +147,66 @@ int chat_group(int argc, char **argv)
 void on_chat_group_destroy()
 {
     gtk_main_quit();
+}
+void on_btn_member_toggled(GtkToggleButton *togglebutton, w_chat_group * widg){
+    if(gtk_widget_is_visible(widg->scrol_member)){
+		gtk_widget_set_visible(widg->scrol_member,FALSE);
+	}else{
+		gtk_widget_set_visible(widg->scrol_member,TRUE);
+        gtk_widget_show_all(widg->scrol_member);
+	}
+}
+void on_btn_send_group_clicked(GtkButton *b, w_chat_group *chat_group_ok){
+    int i;
+    GtkTextIter start, end, iter;
+    GDateTime *date_time;
+    char *markup_message;
+    // gchar *send_name_dtime;
+    gchar *time_;
+    const char *format_error = "<span foreground='red'><u>%s [%s]: </u></span>" ;
+    Object *send_obj = (Object*)malloc(sizeof(Object));
+    send_obj->signal = SIGNAL_CHAT_GROUP;
+    send_obj->chat_group.from_id = obj_list_group->login.id;
+    send_obj->chat_group.ID_Room = id_room;
+    strcpy(send_obj->chat_group.from_name, obj_list_group->login.name);
+    for(i =0 ;i < db_list_group->list_group.length_group; i++){
+        if(db_list_group->list_group.group[i].ID_group == id_room){
+            int j, len = 0;
+            for(j = 0; j < db_list_group->list_group.group[i].length_member; j++){
+                if(db_list_group->list_group.group[i].members[j].ID != obj_list_group->login.id){
+                    send_obj->chat_group.to_id_member[len] = db_list_group->list_group.group[i].members[j].ID;
+                    len++;
+                }
+            }
+            send_obj->chat_group.length_to_member = len;
+            break;
+        }
+    }
+    
+    date_time = g_date_time_new_now_local();
+    //send_name_dtime = g_date_time_format(date_time,"YOU [%F %T]: ");
+    time_ = g_date_time_format(date_time,"%F %T");
+    strcpy(send_obj->chat_group.created_at,time_);
+    markup_message = g_markup_printf_escaped(format_error,obj_list_group->login.name,time_);
+    gtk_text_buffer_get_start_iter(gtk_text_view_get_buffer(chat_group_ok->text_view_send),&start);
+    gtk_text_buffer_get_end_iter(gtk_text_view_get_buffer(chat_group_ok->text_view_send),&end);
+    gtk_text_buffer_get_end_iter(chat_group_ok->text_buff_show,&iter);
+    if(gtk_text_buffer_get_char_count(gtk_text_view_get_buffer(chat_group_ok->text_view_show)) != 0){
+        gtk_text_buffer_insert(chat_group_ok->text_buff_show,&iter,"\n",-1);
+    }
+
+    strcpy(send_obj->chat_group.message,gtk_text_buffer_get_text(
+        gtk_text_view_get_buffer(chat_group_ok->text_view_send),&start,&end,FALSE));
+    if(send(sockfd_chat_group,send_obj,sizeof(Object),0) < 0){
+        perror("send - chat group");
+        return;
+    }
+    
+    gtk_text_buffer_get_end_iter(chat_group_ok->text_buff_show,&iter);
+    gtk_text_buffer_insert_markup(chat_group_ok->text_buff_show,&iter,markup_message,-1);
+    gtk_text_buffer_get_end_iter(chat_group_ok->text_buff_show,&iter);
+    gtk_text_buffer_insert(chat_group_ok->text_buff_show,&iter,gtk_text_buffer_get_text(
+        gtk_text_view_get_buffer(chat_group_ok->text_view_send),&start,&end,FALSE),-1);
+    gtk_text_view_set_buffer(chat_group_ok->text_view_send,gtk_text_buffer_new(NULL));
+
 }

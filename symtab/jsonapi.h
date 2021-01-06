@@ -53,7 +53,9 @@ typedef enum{
 	DB_LIST_FRIEND,
 	SIGNAL_DB_CHAT_PRIVATE,
 	DB_CHAT_PRIVATE,
-	DB_CHAT_PUBLIC
+	DB_CHAT_PUBLIC,
+	SIGNAL_RECV_DB_LIST_GROUP,
+	SIGNAL_DB_LIST_FRIEND_PRIVATE
 }Signal_db;
 
 typedef struct {
@@ -82,7 +84,7 @@ typedef struct {
 
 typedef struct {
 	message_db msg_private[250];
-	int length_message;
+	size_t length_message;
 }Chat_Private_;
 
 typedef struct {
@@ -105,32 +107,41 @@ typedef struct {
 }user_db;
 
 typedef struct {
-	Signal_db signal;
-	user_db user;
 	friend_db list_friend[20];
 	int length_list_friend;
-	Chat_Private_ chat_private;
-	int length_chat_private;
+} List_Friend_;
+
+typedef struct {
 	group_db group[10];
 	int length_group;
+} List_Group_;
+
+
+typedef struct {
+	Signal_db signal;
+	user_db user;
+	List_Friend_ list_friend;
+	List_Group_ list_group;
+	Chat_Private_ chat_private;
 }Data_base;
 
 Data_base *getListFriend(char* element);
 
-Data_base * getGroup();
+Data_base * getGroup(char* element);
 
 Data_base *getMessagePrivate(int from_user, int to_user);
+Data_base *getMessageGroup(int room);
 
 friend_db getFriend(Friend friend);
 
 member_db getMember(int id);
 
-message_db getMessage(Message message,user_db from_profile, user_db to_profile);
+message_db getOneMessageGroup(Message message,user_db from_profile);
 message_db getOneMessagePrivate(MessagePrivate message,user_db from_profile, user_db to_profile);
 
-char *convert_struct_to_json_message(int from_user, char* message, int room, int member[], int size);
+char *convert_struct_to_json_message(int from_user, char* message, int room);
 void postMessage(int from_user, int to_user, char* message);
-
+void postMessageGroup(int from_user,char* message, int room);
 // Chat_Private_ getChatPrivate(message_db message, int index);
 
 

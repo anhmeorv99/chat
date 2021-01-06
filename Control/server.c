@@ -15,7 +15,6 @@
 #define QUEUE_MAX 10
 //test
 typedef struct {
-    char username[30];
     int id;
     int sockfd;
 }Elementtype;
@@ -51,7 +50,7 @@ void printList(Node *root){
     }
     Node *cur = root;
     while(cur != NULL){
-        printf("id: %d\tusername: %s\tsockID: %d\n",cur->element.id,cur->element.username,cur->element.sockfd);
+        printf("id: %d\tsockID: %d\n",cur->element.id,cur->element.sockfd);
         cur = cur->next;
     }
     
@@ -69,7 +68,7 @@ int main(int argc, char **argv){
     int i = 0;
     fd_set readfds, masterfds;
     int client[QUEUE_MAX];
-
+    
     //test
     Node *root = NULL;
     // List_DB *root_db = NULL;
@@ -125,7 +124,7 @@ int main(int argc, char **argv){
             return 0;
         }else if(selectfd == 0){
             printf("timeout\n");
-            sleep(3);
+            //sleep(3);
         }else{
             if(FD_ISSET(sockfd,&readfds)){
                 int index_clie;             
@@ -134,12 +133,7 @@ int main(int argc, char **argv){
                     perror("Error: accept! ");
                     return 0;
                 }
-                Elementtype *element = (Elementtype*)malloc(sizeof(Elementtype));
-                element->sockfd = connfd;
-                printf("sock %d\n",element->sockfd);
-                root = insert_at_end(root,*element);
-                printList(root);
-                printf("\n");
+                
                 printf("New connect with client %d\n",connfd);              
                 index_clie = connfd - sockfd - 1;
                 if(index_clie == QUEUE_MAX){
@@ -158,17 +152,19 @@ int main(int argc, char **argv){
             }
             for(i = 0; i<= maxi;i++){
                 int sock_cl;
+            
                 if((sock_cl = client[i]) < 0) continue;
                 if(FD_ISSET(sock_cl,&readfds)){                  
-                    Object *obj = (Object*)malloc(sizeof(Object));                   
+                    Object *obj = (Object*)malloc(sizeof(Object));
                     if((recvBytes = recv(sock_cl,obj,sizeof(Object),0)) < 0){
                         printf("ERROR! In socket %d\n",sock_cl);
                         perror("recv - message");
                         client[i] = -1;
                         FD_CLR(sock_cl,&masterfds);
                         close(sock_cl);
-                        continue;
-                    }                 
+                        return 0;
+                    }  
+                                  
                     switch(obj->signal){
                         case SIGNAL_LOGIN:
                             {
@@ -183,20 +179,29 @@ int main(int argc, char **argv){
                             //check loi
                              
                                 check_login = check_user(obj->login.username); 
-                                 sleep(0.3); 
+                                 
                               
                                 if(check_login == 1){
                                     userdb = getUser(obj->login.username, -1);
-                                    sleep(0.3); 
+                                   
                                     if(strcmp(userdb.password, obj->login.password) != 0){ // sai pass
                                         err_login = ERR_CAN_NOT_PASSWORD;
                                     }else{ //dang nhap thanh cong
                                         if(userdb.login_status == 0){
+                                            //----them node computer----
+                                            Elementtype *element = (Elementtype*)malloc(sizeof(Elementtype));
+                                            element->sockfd = connfd;
+                                            element->id = userdb.ID_user;
+                        
+                                            root = insert_at_end(root,*element);
+                                            printList(root);
+                                                                                            
+                                            //---------
                                             strcpy(obj->login.name, userdb.name);
                                             obj->login.id = userdb.ID_user;
                                             err_login = ERR_NONE;
                                             loginStatus(obj->login.username, 1);
-                                            sleep(0.3); 
+                                           
                                         }else{
                                             err_login = ERR_USERNAME_LOGIN;
                                         }
@@ -205,18 +210,7 @@ int main(int argc, char **argv){
                                 }else{ //sai username
                                     err_login = ERR_NOT_USERNAME;
                                 }
-                                {
-                                    Node *cur_login = root;
-                                    while(cur_login != NULL){
-                                        if(cur_login->element.sockfd == sock_cl){
-                                            cur_login->element.id = userdb.ID_user;
-                                            strcpy(cur_login->element.username, obj->login.username);
-                                            break;
-                                        }
-                                        cur_login = cur_login->next;
-                                    }
-                                }
-                                printList(root);
+                                
                                 obj->login.err = err_login;
                                 // error_to_string(err_login,msg_err_login);
                                 if(send(sock_cl,obj,sizeof(Object),0) < 0){
@@ -225,13 +219,14 @@ int main(int argc, char **argv){
                                     client[i] = -1;
                                     FD_CLR(sock_cl,&masterfds);
                                     close(sock_cl);
-                                    continue;
+                                    return 0;
                                 }
                                              
                             break;
                             }
                         case SIGNAL_SIGNUP: 
-                        {                         
+                        {             
+
                             printf("------------SIGNUP-----------\n");
                             printf("Name: %s\n",obj->signup.name);
                             printf("Account: %s\n",obj->signup.username);
@@ -262,14 +257,38 @@ int main(int argc, char **argv){
                                 client[i] = -1;
                                 FD_CLR(sock_cl,&masterfds);
                                 close(sock_cl);
-                                continue;
+                                return 0;
                             }
                             
                             //obj->signals = SIGNAL_NONE;
                             break;
                         }
+                        case SIGNAL_CHAT_GROUP:
+                        {
+                            printf("-----------chat group\n");
+                            int i;
+                            Node *cur_chat_group = root;
+                            while(cur_chat_group != NULL){
+                                for(i = 0; i < obj->chat_group.length_to_member; i++){
+                                    if(obj->chat_group.to_id_member[i] == cur_chat_group->element.id){
+                                        if(send(cur_chat_group->element.sockfd, obj,sizeof(Object), 0) < 0){
+                                           printf("ERROR! In socket %d\n",sock_cl);
+                                            perror("send - err");
+                                            client[i] = -1;
+                                            FD_CLR(sock_cl,&masterfds);
+                                            close(cur_chat_group->element.sockfd);
+                                            return 0; 
+                                        }
+                                        break;
+                                    }
+                                }
+
+                                cur_chat_group = cur_chat_group->next;
+                            }
+                            break;
+                        }
                         case SIGNAL_CHAT_PRIVATE:
-                            
+                            printf("-----------chat private\n");
                             printf("%s : %s\n",obj->chat_private.from_username,obj->chat_private.message);
                             //luu db
                             // user_db  profile_recv;
@@ -279,7 +298,7 @@ int main(int argc, char **argv){
                             // sleep(0.3); 
                             
                             postMessage(obj->chat_private.from_id, obj->chat_private.to_id,obj->chat_private.message);
-                            sleep(0.3); 
+                    
                             Node *cur_chat = root;
                             Object *obj_chat_private;
                             while(cur_chat != NULL){
@@ -304,6 +323,7 @@ int main(int argc, char **argv){
                             break;
                         case SIGNAL_RECV_CHAT_PRIVATE:
                         {
+                            printf("-----------recv chat private\n");
                             Data_base *db_chat_private = (Data_base*)malloc(sizeof(Data_base));
                             // user_db  profile_recv;
                             // profile = getUser(obj->chat_private.from_username, -1);
@@ -324,16 +344,17 @@ int main(int argc, char **argv){
                         }
                         case SIGNAL_RECV_LIST_FRIEND:
                         {
+                                printf("-----------recv list friend\n");
                             Data_base *db_list_friend = (Data_base*)malloc(sizeof(Data_base));
                             
                             user_db user = getUser(obj->login.username, -1);
-                            sleep(0.3); 
+                           
                             char* url = (char*)malloc(200*sizeof(char));
                             sprintf(url, "http://127.0.0.1:8000/api/friends/?user=%d", user.ID_user);
                             char* buffer = handle_url(url);
                             if (buffer){
                                 db_list_friend =getListFriend(buffer);
-                                sleep(0.3); 
+                              
                                 db_list_friend->signal = SIGNAL_DB_LIST_FRIEND;
                             }
 
@@ -343,28 +364,86 @@ int main(int argc, char **argv){
                                 client[i] = -1;
                                 FD_CLR(sock_cl,&masterfds);
                                 close(sock_cl);
-                                continue;
+                                return 0;
                             }
                             break;
                         }
+                        case SIGNAL_RECV_LIST_FRIEND_PRIVATE:
+                        {
+                            printf("-----------recv list friend private\n");
+                            Data_base *db_list_friend = (Data_base*)malloc(sizeof(Data_base));
+                            
+                            user_db user = getUser(obj->login.username, -1);
+                            
+                            char* url = (char*)malloc(200*sizeof(char));
+                            sprintf(url, "http://127.0.0.1:8000/api/friends/?user=%d", user.ID_user);
+                            char* buffer = handle_url(url);
+            
+                            if (buffer){
+                                db_list_friend =getListFriend(buffer);
+                            
+                                db_list_friend->signal = SIGNAL_DB_LIST_FRIEND_PRIVATE;
+                            }
+                          
+                
 
+                            if(send(sock_cl,db_list_friend,sizeof(Data_base),0) < 0){
+                                printf("ERROR! In socket %d\n",sock_cl);
+                                perror("send recv list friend");
+                                client[i] = -1;
+                                FD_CLR(sock_cl,&masterfds);
+                                close(sock_cl);
+                                return 0;
+                            }
+                            break;
+                        }
                         case SIGNAL_CHANGE_PASSWORD:
                         {    printf("------Change password-----------\n");
                             printf("Username: %s\n",obj->change_password.username);
                             printf("New Password: %s\n",obj->change_password.new_password);
                             // List_DB *db_change_pass = root_db;
                             changePassword(obj->change_password.username, obj->change_password.new_password);
-                            sleep(0.3); 
+                           
                             break;
                         }
                         case SIGNAL_ADD_FRIEND:
                             
                             break;
+                        case SIGNAL_RECV_LIST_GROUP:
+                        {
+                            printf("-----------SIGNAL_RECV_LIST_GROUP\n");
+                             Data_base *db = (Data_base*)malloc(sizeof(Data_base));
+                            char* buffer = (char*)malloc(200*sizeof(char));
+                            char* url = (char*)malloc(100*sizeof(char));
+                            // int i,j;
+                            sprintf(url,"http://127.0.0.1:8000/api/room/?user=%d", obj->login.id);
+                            buffer = handle_url(url);
+                            if (buffer){
+                                db = getGroup(buffer);
+
+                            }
+                            // for(i = 0; i < db->list_group.length_group;i++){
+                            //     for (j=0;j<db->list_group.group[i].length_msg_public;j++){
+
+                            //         printf("group :%ld , message : %s \n", i, db->list_group.group[i].msg_public[j].message);
+                            //     }
+	                        // }
+                            db->signal = SIGNAL_RECV_DB_LIST_GROUP;
+                            if(send(sock_cl,db,sizeof(Data_base),0) < 0){
+                                printf("ERROR! In socket 123 %d\n",sock_cl);
+                                        perror("recv - list group");
+                                        client[i] = -1;
+                                        FD_CLR(sock_cl,&masterfds);
+                                        close(sock_cl);
+                                        return 0;
+                            }
+                            break;
+                        }
                         case SIGNAL_LOGUOT:
                         {
-                           
+                           printf("----------- SIGNAL_LOGUOT\n");
                             loginStatus(obj->login.username, 0);
-                            sleep(0.3); 
+                           
                         }
                         break;
 

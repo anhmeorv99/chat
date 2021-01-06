@@ -75,7 +75,7 @@ Data_base *getListFriend(char* element){
 	parsed_json = json_tokener_parse(element);
 
 	length_eltype = json_object_array_length(parsed_json);
-	database->length_list_friend = length_eltype;
+	database->list_friend.length_list_friend = length_eltype;
 	if (length_eltype>0){
 		for(i=0;i<length_eltype;i++) {
 		elementType = json_object_array_get_idx(parsed_json, i);
@@ -83,7 +83,7 @@ Data_base *getListFriend(char* element){
 		json_object_object_get_ex(elementType, "friend", &item._friend);
 		json_object_object_get_ex(elementType, "confirm", &item.confirm);
 		json_object_object_get_ex(elementType, "user", &item.user);
-		database->list_friend[i] = getFriend(item);
+		database->list_friend.list_friend[i] = getFriend(item);
 	}	
 	}
 	
@@ -113,18 +113,45 @@ member_db getMember(int id){
 	return Eltype;
 }
 
-message_db getMessage(Message message,user_db from_profile, user_db to_profile){
+message_db getOneMessageGroup(Message message,user_db from_profile){
 	message_db Eltype;
-
+	Eltype.from_id = from_profile.ID_user;
 	strcpy(Eltype.from_username, from_profile.username);
-	
-	strcpy(Eltype.to_username, to_profile.username);
 	strcpy(Eltype.from_name, from_profile.name);
-	strcpy(Eltype.to_name, to_profile.name);
 	strcpy(Eltype.message, json_object_get_string(message.message));
 	strcpy(Eltype.create_at, json_object_get_string(message.created_at));
 	return Eltype;
 }
+Data_base *getMessageGroup(int room){
+	Data_base *database = (Data_base*)malloc(sizeof(Data_base));
+	Message item;
+	size_t length_eltype;
+	size_t i;	
+	struct json_object *parsed_json;
+	struct json_object *elementType;
+	user_db profile;
+	char* url = (char*)malloc(100*sizeof(char));
+	sprintf(url, "http://127.0.0.1:8000/api/message/?room_id=%d", room);
+	
+	char* element = (char*)malloc(100*sizeof(char));
+	element = handle_url(url);
+	parsed_json = json_tokener_parse(element);
+	
+	length_eltype = json_object_array_length(parsed_json);
+	
+	database->list_group.group[0].length_msg_public = length_eltype;
+
+		for(i=0;i<length_eltype;i++) {
+			elementType = json_object_array_get_idx(parsed_json, i);
+			json_object_object_get_ex(elementType, "from_user", &item.from_user);
+			json_object_object_get_ex(elementType, "message", &item.message);
+			json_object_object_get_ex(elementType, "created_at", &item.created_at);
+			profile = getUser(NULL, json_object_get_int(item.from_user));
+			database->list_group.group[0].msg_public[i] = getOneMessageGroup(item, profile);
+	}
+	return database;
+}
+
 
 message_db getOneMessagePrivate(MessagePrivate message,user_db from_profile, user_db to_profile){
 	message_db Eltype;
@@ -178,27 +205,37 @@ Data_base *getMessagePrivate(int from_user, int to_user)
 	return database;
 }
 
-char *convert_struct_to_json_message(int from_user, char* message, int room, int member[], int size){
-    char *buffer = (char*)malloc(200*sizeof(char));
-    char *id = (char*)malloc(sizeof(char));
+char *convert_struct_to_json_message(int from_user, char* message, int room){
     char *data = (char*)malloc(200*sizeof(char));
-    int i;
-    sprintf(buffer,"[");
-    for (i=0;i<size;i++){
-        if (i==size-1){
-             sprintf(id,"%d]",member[i]);
-             strcat(buffer,id);
-        }else {
-            sprintf(id,"%d, ",member[i]);
-            strcat(buffer,id);
-        }
-      
-    }
-   
-    sprintf(data,"{\"from_user\": %d, \"message\": \"%s\", \"room\": %d, \"member\": %s}", from_user,message,room,buffer);
-    free(buffer);
+    sprintf(data,"{\"from_user\": %d, \"message\": \"%s\", \"room\": %d }", from_user,message,room);
     return data;
 }
+
+void postMessageGroup(int from_user,char* message, int room){
+     CURL *curl;
+     CURLcode res;
+	char* data = convert_struct_to_json_message(from_user,message,room);
+  /* In windows, this will init the winsock stuff */ 
+  curl_global_init(CURL_GLOBAL_ALL);
+ 
+  /* get a curl handle */ 
+  curl = curl_easy_init();
+  if(curl) {
+    struct curl_slist *chunk = NULL; 
+    chunk = curl_slist_append(chunk, "Content-Type: application/json");
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, chunk);
+    
+    curl_easy_setopt(curl, CURLOPT_URL, "http://127.0.0.1:8000/api/message/");
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data);
+    res = curl_easy_perform(curl);
+    if(res != CURLE_OK)
+      fprintf(stderr, "curl_easy_perform() failed: %s\n",
+              curl_easy_strerror(res));
+    curl_easy_cleanup(curl);
+  }
+  curl_global_cleanup();
+}
+
 
 void postMessage(int from_user, int to_user, char* message){
      CURL *curl;
@@ -264,47 +301,64 @@ int get_id_room_private(char* username1, char* username2){
 }
 
 
-// group_db getGroupDB(Room room, member_db member, message_db message, int index_member, int index_message){
-// 	group_db Eltype;
-// 	Eltype.ID_group = json_object_get_int(room.id);
-// 	strcpy(Eltype.name,json_object_get_string(room.name));
-// 	Eltype.id_admin = json_object_get_int(room.admin_room);
-// 	Eltype.members[index_member] = member;
-// 	Eltype.length_member = index_member;
-// 	Eltype.msg_public[index_message] = message;
-// 	Eltype.length_msg_public = index_message;
-// 	return Eltype;
-// }
+group_db getGroupDB(Room room, member_db member, message_db message, int index_member, int index_message){
+	group_db Eltype;
+	Eltype.ID_group = json_object_get_int(room.id);
+	strcpy(Eltype.name,json_object_get_string(room.name));
+	Eltype.id_admin = json_object_get_int(room.admin_room);
+	Eltype.members[index_member] = member;
+	Eltype.length_member = index_member;
+	Eltype.msg_public[index_message] = message;
+	Eltype.length_msg_public = index_message;
+	return Eltype;
+}
 
-// Data_base *getGroup(char* element){
-// 	Data_base *database = (Data_base*)malloc(sizeof(Data_base));
-// 	Room item;
-// 	size_t length_eltype, length_member;
-// 	size_t i,j;	
-// 	group_db group;
-// 	member_db member[12];
-// 	message_db message;
-// 	struct json_object *parsed_json;
-// 	struct json_object *elementType;
-// 	struct json_object *id_member;
+Data_base *getGroup(char* element){
+	Data_base *database = (Data_base*)malloc(sizeof(Data_base));
+	Data_base *db_temp = (Data_base*)malloc(sizeof(Data_base));
+	Room item;
+	size_t length_eltype, length_member;
+	size_t i,j,k;	
+	struct json_object *parsed_json;
+	struct json_object *elementType;
+	struct json_object *id_member;
 
-// 	parsed_json = json_tokener_parse(element);
+	parsed_json = json_tokener_parse(element);
 
-// 	length_eltype = json_object_array_length(parsed_json);
+	length_eltype = json_object_array_length(parsed_json);
+	database->list_group.length_group = length_eltype;
 
-// 	for(i=0;i<length_eltype;i++) {
-// 		elementType = json_object_array_get_idx(parsed_json, i);
-// 		json_object_object_get_ex(elementType, "id", &item.id);
-// 		json_object_object_get_ex(elementType, "name", &item.name);
-// 		json_object_object_get_ex(elementType, "admin_room", &item.admin_room);
-// 		json_object_object_get_ex(elementType, "member", &item.member);
-// 		length_member = json_object_array_length(item.member);
-// 		for(j=0;j<length_member;j++) {
-// 			id_member = json_object_array_get_idx(item.member, j);
-// 			member[j] = getMember(id_member);
-// 	}	
-// 	}	
-// }
+	for(i=0;i<length_eltype;i++) {
+		
+		
+
+		elementType = json_object_array_get_idx(parsed_json, i);
+		json_object_object_get_ex(elementType, "id", &item.id);
+		json_object_object_get_ex(elementType, "name", &item.name);
+		json_object_object_get_ex(elementType, "admin_room", &item.admin_room);
+		json_object_object_get_ex(elementType, "member", &item.member);
+		length_member = json_object_array_length(item.member);
+		database->list_group.group[i].ID_group = json_object_get_int(item.id);
+		strcpy(database->list_group.group[i].name, json_object_get_string(item.name)); 
+			// get message
+		db_temp = getMessageGroup(json_object_get_int(item.id));
+		database->list_group.group[i].length_msg_public = db_temp->list_group.group[0].length_msg_public;
+		for (k=0;k<database->list_group.group[i].length_msg_public;k++){
+			database->list_group.group[i].msg_public[k] = db_temp->list_group.group[0].msg_public[k];
+		}
+		
+		// get member
+
+		for(j=0;j<length_member;j++) {
+			id_member = json_object_array_get_idx(item.member, j);
+			database->list_group.group[i].members[j] = getMember(json_object_get_int(id_member));
+			database->list_group.group[i].length_member = j+1;
+		}	
+	}	
+
+	free(db_temp);
+	return database;
+}
 
 user_db getUserDB(User user){
 	user_db Eltype;
@@ -521,34 +575,31 @@ void loginStatus(char* username,int status){
 }
 // int main(int argc, char **argv) {
 	
-	// convert_object_to_struct_user();
-	// convert_object_to_struct_room();
-	// convert_object_to_struct_message();
-	// convert_object_to_struct_friend();
+// 	size_t i,j,k;
+// 	Data_base *db = (Data_base*)malloc(100*sizeof(Data_base));
+// 	Data_base *database = (Data_base*)malloc(100*sizeof(Data_base));
+// 	char *buffer = (char*)malloc(1000*sizeof(char));
+// 	char * buffer_friend = (char*)malloc(1000*sizeof(char));
+// 	// char url_friend[] = "http://127.0.0.1:8000/api/friends/?user=1";
+// 	char url[]= "http://127.0.0.1:8000/api/room/?user=2";
+//  	buffer = handle_url(url);
+// 	// buffer_friend = handle_url(url_friend);
+// 	if (buffer){
+// 		db = getGroup(buffer);
+// 	}
 
-	// size_t i;
-	// Data_base *db = (Data_base*)malloc(100*sizeof(Data_base));
-	// char *buffer = (char*)malloc(1000*sizeof(char));
-	// char * buffer_friend = (char*)malloc(1000*sizeof(char));
-	// // char url_friend[] = "http://127.0.0.1:8000/api/friends/?user=1";
-	// char url[]= "http://127.0.0.1:8000/api/message/?user=1";
- 	// buffer = handle_url(url);
-	// buffer_friend = handle_url(url_friend);
-	// if (buffer){
-	// 	db = getListRoom(buffer);
-	// }
-	
-    // db = getMessagePrivate(1,2);
-	
-	// printf("%d\n",db->chat_private.length_message);
-	// for (i =0 ; i< db->chat_private.length_message;i++)
-	// {
-	// 	printf("from %s to %s : %s\n",db->chat_private.msg_private[i].from_name,db->chat_private.msg_private[i].to_name, db->chat_private.msg_private[i].message);
-	// }
-	// // free(buffer);
-	// free(db);
+// 	printf("leng = %d \n", db->list_group.length_group);
+// 	// for(i = 0; i < db->list_group.length_group;i++){
+// 	// 	printf("%d", db->list_group.group[i].ID_group);
+// 		// for (j=0;j<db->list_group.group[i].length_msg_public;j++){
 
-	// postMessage(1,2,"Day la test");
-	
-	// return 1;
+// 		// 	printf("group : %s \n", db->list_group.group[i].name);
+// 		// }
+// 	// }
+
+// 	// 	for (j=0;j<db->list_group.group[0].length_msg_public;j++){
+// 	// 		printf("group :%ld , message : %s \n", i, db->list_group.group[0].msg_public[j].message);
+// 	// 	}
+// 	// // postMessageGroup(1,"Xin chao phong 2", 2);
+// 	return 1;
 // }
