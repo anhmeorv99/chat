@@ -7,8 +7,11 @@ typedef enum {
 	SIGNAL_RECV_CHAT_PRIVATE,
 	SIGNAL_CHAT_PRIVATE,
 	SIGNAL_RECV_LIST_GROUP,
+	SIGNAL_ADD_ROOM,
 	SIGNAL_CHAT_GROUP,
 	SIGNAL_RECV_LIST_FRIEND,
+	SIGNAL_CONFIRM_FRIEND,
+	SIGNAL_NO_CONFIRM_FRIEND,
 	SIGNAL_RECV_LIST_FRIEND_PRIVATE,
 	SIGNAL_ADD_FRIEND,
 	SIGNAL_CHANGE_PASSWORD,
@@ -61,6 +64,12 @@ typedef struct {
 	int from_id;
 	char created_at[20];
 }Chat_Group_OK;
+typedef struct{
+	Error err;
+	int ID;
+	char name[30];
+	char username[30];
+}Add_Member;
 typedef struct {
 	Signals signal;
 	Login login;
@@ -69,6 +78,7 @@ typedef struct {
 	Chat_Private chat_private;
 	Change_Password change_password;
 	Chat_Group_OK chat_group;
+	Add_Member add_member;
 }Object;
 
 //cap phat Object void signal la none

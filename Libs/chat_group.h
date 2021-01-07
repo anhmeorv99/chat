@@ -8,12 +8,26 @@ typedef struct {
     GtkTextView *text_view_show;
     GtkTextView *text_view_send;
     GtkTextBuffer *text_buff_show;
-    
+    GtkWidget *lbl_id_room;
+    GtkWidget *entry_add_member;
+    GtkWidget *lbl_err_username;
 }w_chat_group;
 Data_base *db_list_group;
 Object *obj_list_group;
 int sockfd_chat_group;
 int id_room;
+gboolean check_chat_group = FALSE;
+
+gboolean getCheckChatGroup(){
+    return check_chat_group;
+}
+
+void setCheckChatGroup(){
+    if(getCheckChatGroup() == FALSE)
+        check_chat_group = TRUE;
+    else
+        check_chat_group = FALSE;
+}
 void dup_login_list_group(Object *obj){
     obj_list_group = duplicate_object(obj);
 }
@@ -30,7 +44,10 @@ void recv_chat_group(void *app){
     while(1){
             GtkTextIter iter;
             recv_chat = recv(sockfd_chat_group,obj,sizeof(Object),0);
-            if(recv_chat < 0 ) break;
+            if(recv_chat < 0 ){
+                perror("recv - chat group");
+                exit(0);
+            };
      
    
                 if (obj->signal == SIGNAL_CHAT_GROUP)
@@ -75,6 +92,9 @@ int chat_group(int argc, char **argv,int sockfd,int id)
     chat_group_->text_buff_show = GTK_TEXT_BUFFER(gtk_builder_get_object(builder_chat_group,"text_buffer_chat_group"));
     chat_group_->text_view_show = GTK_TEXT_VIEW(gtk_builder_get_object(builder_chat_group,"text_view_chat_group"));
     chat_group_->text_view_send =  GTK_TEXT_VIEW(gtk_builder_get_object(builder_chat_group,"text_view_send"));
+    chat_group_->lbl_id_room = GTK_WIDGET(gtk_builder_get_object(builder_chat_group,"lbl_id_room"));
+    chat_group_->lbl_err_username = GTK_WIDGET(gtk_builder_get_object(builder_chat_group,"lbl_err_user"));
+    chat_group_->entry_add_member = GTK_WIDGET(gtk_builder_get_object(builder_chat_group,"entry_add_username"));
     //////////
     gtk_builder_connect_signals(builder_chat_group, chat_group_);
    
@@ -82,7 +102,9 @@ int chat_group(int argc, char **argv,int sockfd,int id)
     for(i = 0; i < db_list_group->list_group.length_group; i++){
         if (db_list_group->list_group.group[i].ID_group == id){
                 int row;
-            
+                char strId[20];
+                sprintf(strId,"ID_ROOM: %d",id);
+                gtk_label_set_text(GTK_LABEL(chat_group_->lbl_id_room),strId);
                 for(row = 0; row < db_list_group->list_group.group[i].length_member; row++){
                     
                         chat_group_->btn_member[row] = gtk_button_new_with_label(db_list_group->list_group.group[i].members[row].name);
@@ -146,6 +168,7 @@ int chat_group(int argc, char **argv,int sockfd,int id)
 // called when window is closed
 void on_chat_group_destroy()
 {
+    setCheckChatGroup();
     gtk_main_quit();
 }
 void on_btn_member_toggled(GtkToggleButton *togglebutton, w_chat_group * widg){
@@ -199,7 +222,7 @@ void on_btn_send_group_clicked(GtkButton *b, w_chat_group *chat_group_ok){
         gtk_text_view_get_buffer(chat_group_ok->text_view_send),&start,&end,FALSE));
     if(send(sockfd_chat_group,send_obj,sizeof(Object),0) < 0){
         perror("send - chat group");
-        return;
+        exit(0);
     }
     
     gtk_text_buffer_get_end_iter(chat_group_ok->text_buff_show,&iter);
@@ -209,4 +232,79 @@ void on_btn_send_group_clicked(GtkButton *b, w_chat_group *chat_group_ok){
         gtk_text_view_get_buffer(chat_group_ok->text_view_send),&start,&end,FALSE),-1);
     gtk_text_view_set_buffer(chat_group_ok->text_view_send,gtk_text_buffer_new(NULL));
 
+}
+
+void on_add_member_clicked(GtkButton *b, w_chat_group *chat_group){
+    const char *format_invalid = "<span foreground='blue'>%s</span>" ;
+    const char *format_error = "<span foreground='red'>%s</span>" ;
+    char *markup_message;
+    if(strlen(gtk_entry_get_text(GTK_ENTRY(chat_group->entry_add_member))) == 0){
+        char err_msg[] = "Ban chua nhap USERNAME!";
+        markup_message = g_markup_printf_escaped(format_error,err_msg);
+        gtk_label_set_markup(GTK_LABEL(chat_group->lbl_err_username),markup_message);
+        gtk_widget_set_visible(chat_group->lbl_err_username, TRUE);
+        g_free(markup_message);
+    }else{
+        
+        int recv_byte;
+        
+        strcpy(obj_list_group->add_member.username, gtk_entry_get_text(GTK_ENTRY(chat_group->entry_add_member)));
+        obj_list_group->signal = SIGNAL_ADD_ROOM;
+        if(send(sockfd_chat_group,obj_list_group, sizeof(Object),0) < 0){
+            perror("send - add room");
+            exit(0);
+        }
+        Object *obj = (Object*)malloc(sizeof(Object));
+        if((recv_byte = recv(sockfd_chat_group,obj, sizeof(Object), 0)) < 0){
+            perror("recv add room");
+            exit(0);
+        }
+        
+        if(obj->add_member.err == ERR_NONE){ //them member
+            int i, len;
+            for(i =0 ;i < db_list_group->list_group.length_group; i++){
+                if(db_list_group->list_group.group[i].ID_group==id_room){
+                    len = db_list_group->list_group.group[i].length_member;
+                    if (len>=10){
+                          char err_msg[] = "Thanh vien da day!";
+                            markup_message = g_markup_printf_escaped(format_error,err_msg);
+                            gtk_label_set_markup(GTK_LABEL(chat_group->lbl_err_username),markup_message);
+                            gtk_widget_set_visible(chat_group->lbl_err_username, TRUE);
+                            g_free(markup_message);
+                    }else
+                    {
+                    char id_mem[5];
+                    sprintf(id_mem,"%d",obj->add_member.ID); 
+                    chat_group->btn_member[len] = gtk_button_new_with_label(obj->add_member.name);
+                    gtk_widget_set_name(chat_group->btn_member[len], id_mem);
+                    // g_signal_connect(list_group->btn_group[i],"clicked",G_CALLBACK(on_btn_group),NULL);
+                    gtk_grid_insert_row(GTK_GRID(chat_group->grid_member),len);
+                    gtk_grid_attach(GTK_GRID(chat_group->grid_member),chat_group->btn_member[len],1,len,1,1);
+                    gtk_widget_show_all(chat_group->scrol_member);
+                    db_list_group->list_group.group[i].length_member++;
+                  
+                    }
+                    
+                    break;
+                }
+            }
+        
+
+            char err_msg[] = "Them thanh vien thanh cong!";
+            markup_message = g_markup_printf_escaped(format_invalid,err_msg);
+            gtk_label_set_markup(GTK_LABEL(chat_group->lbl_err_username),markup_message);
+            gtk_widget_set_visible(chat_group->lbl_err_username, TRUE);
+            g_free(markup_message);
+                    
+          
+        }else{
+            char msg_con[100];
+            error_to_string(obj->add_member.err,msg_con);
+            markup_message = g_markup_printf_escaped(format_error,msg_con);
+            gtk_label_set_markup(GTK_LABEL(chat_group->lbl_err_username),markup_message);
+            gtk_widget_set_visible(chat_group->lbl_err_username, TRUE);
+            g_free(markup_message);
+        }
+    }
+    
 }

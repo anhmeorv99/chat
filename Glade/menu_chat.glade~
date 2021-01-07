@@ -39,7 +39,7 @@
         </child>
         <child>
           <object class="GtkButton" id="btn_chat_private">
-            <property name="label" translatable="yes">Chat Private</property>
+            <property name="label" translatable="yes">Chat riêng</property>
             <property name="width_request">200</property>
             <property name="height_request">40</property>
             <property name="visible">True</property>
@@ -55,7 +55,7 @@
         </child>
         <child>
           <object class="GtkButton" id="btn_chat_group">
-            <property name="label" translatable="yes">Chat Group</property>
+            <property name="label" translatable="yes">Chat Nhóm</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
@@ -68,12 +68,12 @@
           </packing>
         </child>
         <child>
-          <object class="GtkButton" id="btn_list_friend">
-            <property name="label" translatable="yes">List Friend</property>
+          <object class="GtkButton" id="btn_list_friend_menu">
+            <property name="label" translatable="yes">Danh sách bạn bè</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
-            <signal name="clicked" handler="on_btn_list_friend_clicked" swapped="no"/>
+            <signal name="clicked" handler="on_btn_list_friend_menu_clicked" swapped="no"/>
           </object>
           <packing>
             <property name="expand">False</property>
@@ -83,7 +83,7 @@
         </child>
         <child>
           <object class="GtkButton" id="btn_change_password">
-            <property name="label" translatable="yes">Change Password</property>
+            <property name="label" translatable="yes">Đổi mật khẩu</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
@@ -97,7 +97,7 @@
         </child>
         <child>
           <object class="GtkButton" id="btn_admin">
-            <property name="label" translatable="yes">Admin</property>
+            <property name="label" translatable="yes">Quản trị viên</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
@@ -110,7 +110,7 @@
         </child>
         <child>
           <object class="GtkButton" id="btn_logout">
-            <property name="label" translatable="yes">Log Out</property>
+            <property name="label" translatable="yes">Đăng xuất</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>

@@ -83,11 +83,11 @@ void on_login_btn_login_clicked(GtkButton *button, login_form *login_in){
         int recvBytes;
         if(send(sock_app,object,sizeof(Object),0) < 0){
             perror("send - login");
-            return;
+            exit(0);
         }
         if((recvBytes = recv(sock_app,object,sizeof(Object),0)) < 0){
             perror("recv-login");
-            return;
+            exit(0);
         }
         // msg_err_login[recvBytes] = '\0';
         error_to_string(object->login.err,msg_err_login);

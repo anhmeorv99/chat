@@ -38,7 +38,6 @@ char *handle_url(char* url) {
     data.data = malloc(4096); /* reasonable size initial buffer */
     if(NULL == data.data) {
         fprintf(stderr, "Failed to allocate memory.\n");
-        return NULL;
     }
 
     data.data[0] = '\0';
@@ -54,8 +53,9 @@ char *handle_url(char* url) {
         if(res != CURLE_OK) {
                 fprintf(stderr, "curl_easy_perform() failed: %s\n",  
                         curl_easy_strerror(res));
-        }
 
+			return NULL;
+        } 
         curl_easy_cleanup(curl);
 
     }

@@ -7,10 +7,12 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include "../src/application.h"
-
+#include <pthread.h>
 
 int checkIP(char *str);
 int checkNumber(char *str);
+
+
 
 int main(int argc, char **argv){
     int sockfd, port;
@@ -53,6 +55,7 @@ int main(int argc, char **argv){
         perror("Error ");
         return 0;
     }
+    
     app(argc,argv,sockfd);
    
     close(sockfd);

@@ -101,7 +101,7 @@ void on_btn_submit_clicked(GtkButton *b, Change_Pass *change_pass){
         Invalid inval = OK_CHANGE_PASSWORD;
         if(send(sockfd_change_pass,data_change_pass,sizeof(Object),0) < 0){
             perror("send - change pass");
-            return;
+            exit(0);
         }
         invalid_to_string(inval,message);
         g_stpcpy(obj_login->login.password,data_change_pass->change_password.new_password);

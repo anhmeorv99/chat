@@ -24,7 +24,18 @@ int sock_chat_private;
 
 GtkWidget       *window_chat;
 // GtkWidget       *window_friend_chat;
+gboolean check_chat_private = FALSE;
 
+gboolean getCheckChatPrivate(){
+    return check_chat_private;
+}
+
+void setCheckChatPrivate(){
+    if(getCheckChatPrivate() == FALSE)
+        check_chat_private = TRUE;
+    else
+        check_chat_private = FALSE;
+}
 void dup_obj_chat_private(Object *obj){
     obj_chat_private = duplicate_object(obj);
 }
@@ -62,13 +73,13 @@ void on_btn_list_friend_private(GtkButton *button,app_widgets *widg){
 
     if(send(sock_chat_private, obj_chat_private,sizeof(Object), 0) < 0){
         perror("send - chat private");
-        return;
+        exit(0);
     }
 
 
          if (recv(sock_chat_private,db_recv_chat_private,sizeof(Data_base),0)<0){
             perror("recv chat private");
-            return;
+            exit(0);
     }
       printf("leng = %ld \n", db_recv_chat_private->chat_private.length_message);
 
@@ -115,7 +126,10 @@ void recv_to_friend(void *app){
     while(1){
             GtkTextIter iter;
             recv_chat = recv(sock_chat_private,obj,sizeof(Object),0);
-            if(recv_chat < 0 ) break;
+            if(recv_chat < 0 ){
+                perror("recv chat private");
+                exit(0);
+            }
             
                 if(obj->signal == SIGNAL_ADD_FRIEND){
 
@@ -169,7 +183,7 @@ int chat_private(int argc, char **argv,int sockfd)
     obj_chat_private->signal = SIGNAL_RECV_LIST_FRIEND_PRIVATE;
     if(send(sock_chat_private,obj_chat_private,sizeof(Object), 0) < 0){
         perror("send - list friend");
-        return 0;
+        exit(0);
     }
     Data_base *db_list_friend_private = (Data_base*)malloc(sizeof(Data_base));
 
@@ -177,7 +191,7 @@ int chat_private(int argc, char **argv,int sockfd)
         
         if(recv(sock_chat_private,db_list_friend_private,sizeof(Data_base), MSG_WAITALL) < 0){
             perror("recv - list friend");
-            return 0;
+            exit(0);
         }
 
         if(db_list_friend_private->signal == SIGNAL_DB_LIST_FRIEND_PRIVATE){
@@ -226,6 +240,7 @@ int chat_private(int argc, char **argv,int sockfd)
 // called when window is closed
 void on_window_chat_destroy()
 {
+    setCheckChatPrivate();
     gtk_main_quit();
  
 }
@@ -258,7 +273,7 @@ void on_chat_send_clicked(GtkButton *button, app_widgets *widg){
     strcpy(obj_chat_private->chat_private.to_name, gtk_label_get_text(GTK_LABEL(widg->lbl_name_friend)));
     if(send(sock_chat_private,obj_chat_private,sizeof(Object),0) < 0){
         perror("send - chat private");
-        return;
+        exit(0);
     }
     
     gtk_text_buffer_get_end_iter(widg->text_buffer_view,&iter);

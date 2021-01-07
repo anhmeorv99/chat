@@ -92,12 +92,12 @@ void on_signup_btn_signup_clicked(GtkButton *button, signup_form *signup_in){
         //gui obj len server neu dau vao dc kiem duyet
         if(send(signup_in->sockfd,obj,sizeof(Object),0) < 0){
             perror("send- signup");
-            return;
+            exit(0);
         }
         //nhan tin hieu tu server 
         if((recvBytes = recv(signup_in->sockfd,msg_err_username,sizeof(msg_err_username),0)) < 0){
             perror("recv - signup");
-            return;
+            exit(0);
         }
         msg_err_username[recvBytes] = '\0';
         err_has_username_ = error_to_enum(msg_err_username);

@@ -42,7 +42,25 @@ Node *insert_at_end(Node *root, Elementtype element){
 
     return root;
 }
+Node *delete_node(Node* root, int sock){
+    Node *cur = root;
+    if(root->element.sockfd == sock){
+        root = root->next;
+        return root;
+    }
 
+    while(cur->next != NULL){
+
+        if(cur->next->element.sockfd == sock){
+            Node *p = cur->next;
+            cur->next = p->next;
+            free(p);
+            break;
+        }
+        cur = cur->next;
+    }
+    return root;
+}
 void printList(Node *root){
     if(root == NULL){
         printf("ds rong\n");
@@ -109,12 +127,20 @@ int main(int argc, char **argv){
         perror("Error: listen!");
         return 0;
     }
-
+    char check_url[] ="http://127.0.0.1:8000/api/user";
+    char * buff_check_server = (char*)malloc(100*sizeof(char));
     FD_ZERO(&masterfds);
     FD_ZERO(&readfds);
     FD_SET(sockfd,&masterfds);
     maxfd = sockfd;
-
+    buff_check_server = handle_url(check_url);
+    if (buff_check_server==NULL) {
+        printf("Cant connect to database server \n");
+        free(buff_check_server);
+        close(sockfd);
+        return 0;
+    }
+   
     puts("Server running...");
 
     do{
@@ -134,6 +160,7 @@ int main(int argc, char **argv){
                     return 0;
                 }
                 
+
                 printf("New connect with client %d\n",connfd);              
                 index_clie = connfd - sockfd - 1;
                 if(index_clie == QUEUE_MAX){
@@ -152,9 +179,15 @@ int main(int argc, char **argv){
             }
             for(i = 0; i<= maxi;i++){
                 int sock_cl;
-            
+
+                        buff_check_server = handle_url(check_url);
+                        if (buff_check_server==NULL) {
+                            free(buff_check_server);
+                            close(sockfd);
+                            return 0;
+                    }
                 if((sock_cl = client[i]) < 0) continue;
-                if(FD_ISSET(sock_cl,&readfds)){                  
+                if(FD_ISSET(sock_cl,&readfds)){   
                     Object *obj = (Object*)malloc(sizeof(Object));
                     if((recvBytes = recv(sock_cl,obj,sizeof(Object),0)) < 0){
                         printf("ERROR! In socket %d\n",sock_cl);
@@ -435,11 +468,41 @@ int main(int argc, char **argv){
                             }
                             break;
                         }
+                        case SIGNAL_ADD_ROOM:
+                        {
+                            int check = check_user(obj->add_member.username);
+                            if (check == -1){
+                                obj->add_member.err = ERR_NOT_USERNAME;
+                                
+                            } else {
+                                user_db user = getUser(obj->add_member.username, -1);
+                                strcpy(obj->add_member.name, user.name);
+                                obj->add_member.ID = user.ID_user;
+                                obj->add_member.err = ERR_NONE;
+                                //---them member vao database
+                            }
+                            if(send(sock_cl,obj,sizeof(Object),0) < 0){
+
+                            }
+                            break;
+                        }
+                        case SIGNAL_CONFIRM_FRIEND:
+                        {
+                            // update status friend
+                            
+                            break;
+                        }
+                        case SIGNAL_NO_CONFIRM_FRIEND:
+                        {
+                            // delete friend 
+                            break;
+                        }
                         case SIGNAL_LOGUOT:
                         {
                            printf("----------- SIGNAL_LOGUOT\n");
+                           root = delete_node(root,sock_cl);
                             loginStatus(obj->login.username, 0);
-                           
+                          
                         }
                         break;
 
