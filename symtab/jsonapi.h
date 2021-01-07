@@ -61,58 +61,58 @@ typedef enum{
 typedef struct {
 	int ID; //khoa chinh
 	int confirm;
-	char username[30]; //username cua friend
-	char name[30];
+	char username[20]; //username cua friend
+	char name[15];
 }friend_db;
 
 typedef struct {
 	int ID; 
-	char username[30];
-	char name[30];
+	char username[20];
+	char name[20];
 }member_db;
 
 typedef struct {
 	int from_id;
 	int to_id;
-	char from_username[30];
-	char to_username[30];
-	char to_name[30];
-	char from_name[30];
-	char message[500];
-	char create_at[50];
+	char from_username[20];
+	char to_username[20];
+	char to_name[20];
+	char from_name[20];
+	char message[100];
+	char create_at[20];
 }message_db;
 
 typedef struct {
-	message_db msg_private[250];
+	message_db msg_private[100];
 	size_t length_message;
 }Chat_Private_;
 
 typedef struct {
 	int ID_group;
-	char name[30];
+	char name[20];
 	int id_admin;
 	member_db members[12];
 	int length_member;
-	message_db msg_public[500];
+	message_db msg_public[50];
 	int length_msg_public;
 }group_db;
 
 typedef struct {
 	int ID_user;
-	char name[30];
-	char username[30];
-	char password[30];
+	char name[20];
+	char username[20];
+	char password[20];
 	int is_admin;
 	int login_status;
 }user_db;
 
 typedef struct {
-	friend_db list_friend[20];
+	friend_db list_friend[10];
 	int length_list_friend;
 } List_Friend_;
 
 typedef struct {
-	group_db group[10];
+	group_db group[5];
 	int length_group;
 } List_Group_;
 

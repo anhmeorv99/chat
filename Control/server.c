@@ -266,6 +266,8 @@ int main(int argc, char **argv){
                         case SIGNAL_CHAT_GROUP:
                         {
                             printf("-----------chat group\n");
+                            // luu db
+                            postMessageGroup(obj->chat_group.from_id,obj->chat_group.message, obj->chat_group.ID_Room);
                             int i;
                             Node *cur_chat_group = root;
                             while(cur_chat_group != NULL){
@@ -290,12 +292,6 @@ int main(int argc, char **argv){
                         case SIGNAL_CHAT_PRIVATE:
                             printf("-----------chat private\n");
                             printf("%s : %s\n",obj->chat_private.from_username,obj->chat_private.message);
-                            //luu db
-                            // user_db  profile_recv;
-                            // profile = getUser(obj->chat_private.from_username, -1);
-                            // sleep(0.3); 
-                            // profile_recv = getUser(obj->chat_private.to_username, -1);
-                            // sleep(0.3); 
                             
                             postMessage(obj->chat_private.from_id, obj->chat_private.to_id,obj->chat_private.message);
                     
