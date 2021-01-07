@@ -25,7 +25,7 @@
         </child>
         <child>
           <object class="GtkButton">
-            <property name="label" translatable="yes">Chap Nhan</property>
+            <property name="label" translatable="yes">Chấp nhận</property>
             <property name="width_request">200</property>
             <property name="height_request">40</property>
             <property name="visible">True</property>
@@ -40,7 +40,7 @@
         </child>
         <child>
           <object class="GtkButton">
-            <property name="label" translatable="yes">Khong Chap Nhan</property>
+            <property name="label" translatable="yes">Không chấp nhận</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
@@ -77,18 +77,7 @@
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <child>
-              <object class="GtkButton">
-                <property name="label" translatable="yes">Back</property>
-                <property name="width_request">100</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">0</property>
-              </packing>
+              <placeholder/>
             </child>
             <child>
               <placeholder/>
@@ -131,7 +120,7 @@
                 <property name="height_request">30</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="label" translatable="yes">Username</property>
+                <property name="label" translatable="yes">Tài Khoản</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -153,7 +142,7 @@
             </child>
             <child>
               <object class="GtkButton" id="btn_add_friend">
-                <property name="label" translatable="yes">Add</property>
+                <property name="label" translatable="yes">Thêm</property>
                 <property name="width_request">80</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
@@ -236,8 +225,9 @@
           <object class="GtkLabel" id="lbl_null_list_friend">
             <property name="width_request">300</property>
             <property name="height_request">300</property>
+            <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="label" translatable="yes">Hien tai chua co danh sach</property>
+            <property name="label" translatable="yes">Danh sách trống !</property>
           </object>
           <packing>
             <property name="expand">False</property>
@@ -267,7 +257,7 @@
         <property name="spacing">5</property>
         <child>
           <object class="GtkButton" id="btn_thong_bao">
-            <property name="label" translatable="yes">Thong Bao</property>
+            <property name="label" translatable="yes">Lời mời kết bạn</property>
             <property name="width_request">300</property>
             <property name="height_request">40</property>
             <property name="visible">True</property>
@@ -283,7 +273,7 @@
         </child>
         <child>
           <object class="GtkButton" id="btn_list_friend">
-            <property name="label" translatable="yes">List Friend</property>
+            <property name="label" translatable="yes">Danh sách bạn bè</property>
             <property name="height_request">40</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
@@ -297,18 +287,7 @@
           </packing>
         </child>
         <child>
-          <object class="GtkButton" id="btn_goi_y">
-            <property name="label" translatable="yes">Goi Y</property>
-            <property name="height_request">40</property>
-            <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="receives_default">True</property>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">True</property>
-            <property name="position">2</property>
-          </packing>
+          <placeholder/>
         </child>
       </object>
     </child>
@@ -335,18 +314,7 @@
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <child>
-              <object class="GtkButton">
-                <property name="label" translatable="yes">Back</property>
-                <property name="width_request">100</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">0</property>
-              </packing>
+              <placeholder/>
             </child>
             <child>
               <placeholder/>
@@ -362,7 +330,7 @@
           </packing>
         </child>
         <child>
-          <object class="GtkScrolledWindow">
+          <object class="GtkScrolledWindow" id="scrol_thong_bao">
             <property name="width_request">300</property>
             <property name="height_request">300</property>
             <property name="visible">True</property>
@@ -374,7 +342,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <child>
-                  <object class="GtkGrid">
+                  <object class="GtkGrid" id="grid_thong_bao">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="margin_top">10</property>
@@ -382,16 +350,7 @@
                     <property name="column_homogeneous">True</property>
                     <property name="baseline_row">1</property>
                     <child>
-                      <object class="GtkButton">
-                        <property name="label" translatable="yes">button</property>
-                        <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="receives_default">True</property>
-                      </object>
-                      <packing>
-                        <property name="left_attach">0</property>
-                        <property name="top_attach">0</property>
-                      </packing>
+                      <placeholder/>
                     </child>
                   </object>
                 </child>
@@ -405,11 +364,12 @@
           </packing>
         </child>
         <child>
-          <object class="GtkLabel">
+          <object class="GtkLabel" id="lbl_null_thong_bao">
             <property name="width_request">300</property>
             <property name="height_request">300</property>
+            <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="label" translatable="yes">Hien khong co thong bao</property>
+            <property name="label" translatable="yes">Hiện chưa có lời mời kết bạn !</property>
           </object>
           <packing>
             <property name="expand">False</property>

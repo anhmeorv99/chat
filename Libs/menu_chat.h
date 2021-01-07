@@ -59,7 +59,7 @@ void on_menu_chat_destroy()
     obj_menu_chat->signal = SIGNAL_LOGUOT;
     if(send(sockfd_menu_chat,obj_menu_chat,sizeof(Object), 0) < 0){
         perror("Can't logout");
-        return;
+        exit(0);
     }
     gtk_main_quit();
     gtk_widget_set_visible(window_login,TRUE);
@@ -68,20 +68,27 @@ void on_menu_chat_destroy()
 
 void on_btn_chat_private_clicked(){
   
-    //friend_chat_private(argc_command,&argv_command);
-    // if (gtk_window_activate_focus(GTK_WINDOW(window_chat)) == FALSE){
+    if(getCheckChatPrivate() == FALSE){
+        setCheckChatPrivate();
         chat_private(argc_command, &argv_command,sockfd_menu_chat);
-        
-//    }
-    
+    }
+     
 }
 
 void on_btn_chat_group_clicked(){
-    list_group_chat(argc_command,&argv_command,sockfd_menu_chat);
+    if(getCheckListGroup() == FALSE){
+        setCheckListGroup();
+        list_group_chat(argc_command,&argv_command,sockfd_menu_chat);
+    }
+    
 }
 
 void on_btn_list_friend_menu_clicked(){
-    menu_list_friend(argc_command,&argv_command,sockfd_menu_chat);
+    if(getCheckMenuFriend() == FALSE){
+        setCheckMenuFriend();
+        menu_list_friend(argc_command,&argv_command,sockfd_menu_chat);
+    }
+    
 }
 
 void on_btn_change_password_clicked(){

@@ -9,7 +9,12 @@ typedef struct {
     GtkWidget *btn_list_friend[100];
     //GtkWidget *btn_add_friend;
 }w_list_friend;
-
+typedef struct {
+    GtkWidget *scrol_thong_bao;
+    GtkWidget *grid_thong_bao;
+    GtkWidget *btn_thong_bao[50];
+    GtkWidget *lbl_null_thong_bao;
+}w_thong_bao;
 GtkWidget *window_menu_friend;
 GtkWidget *window_thong_bao;
 GtkWidget *window_list_friend;
@@ -17,9 +22,22 @@ GtkWidget *window_confirm_friend;
 int sockfd_friend;
 int argc_friend;
 char *argv_friend;
-
+int id_confirm_friend;
+int row_thong_bao;
+Data_base *db_list_friend;
 Object *obj_login_list_friend;
+gboolean check_menu_list_friend = FALSE;
 
+gboolean getCheckMenuFriend(){
+    return check_menu_list_friend;
+}
+
+void setCheckMenuFriend(){
+    if(getCheckMenuFriend() == FALSE)
+        check_menu_list_friend = TRUE;
+    else
+        check_menu_list_friend = FALSE;
+}
 void dup_obj_list_friend(Object *obj){
     obj_login_list_friend = duplicate_object(obj);
 }
@@ -42,7 +60,18 @@ int menu_list_friend(int argc, char **argv,int sockfd)
     window_menu_friend = GTK_WIDGET(gtk_builder_get_object(builder_menu_friend, "menu_list_friend"));
     gtk_builder_connect_signals(builder_menu_friend, NULL);
     //--
-    
+    obj_login_list_friend->signal = SIGNAL_RECV_LIST_FRIEND;
+    if(send(sockfd_friend,obj_login_list_friend,sizeof(Object), 0) < 0){
+        perror("send - list friend");
+        exit(0);
+    }
+    db_list_friend = (Data_base*)malloc(sizeof(Data_base));
+
+  
+        if(recv(sockfd_friend,db_list_friend,sizeof(Data_base), MSG_WAITALL) < 0){
+            perror("recv - list friend");
+            exit(0);
+        }
     //gtk_window_set_decorated(GTK_WINDOW(window_signup),FALSE);
     
     //--
@@ -58,6 +87,7 @@ int menu_list_friend(int argc, char **argv,int sockfd)
 // called when window is closed
 void on_menu_list_friend_destroy()
 {
+    setCheckMenuFriend();
     gtk_main_quit();
 }
 
@@ -77,19 +107,59 @@ void on_btn_list_friend_clicked(){
 }
 
 //------------thong bao------------------
+int confirm_friend(int argc, char **argv, w_thong_bao *thong_bao,int id_confirm_friend_ok);
+void on_btn_thong_bao(GtkButton *b, w_thong_bao *thong_bao){
+    gtk_widget_set_sensitive (window_thong_bao, FALSE);
+    confirm_friend(argc_friend,&argv_friend,thong_bao,atoi(gtk_widget_get_name(GTK_WIDGET(b))));
+}
 //main
 int thong_bao(int argc, char **argv)
 {
+    int i;
+    
     GtkBuilder      *builder_thong_bao; 
     gtk_init(&argc, &argv);
-
+    w_thong_bao *thong_bao = g_slice_new(w_thong_bao);
     builder_thong_bao = gtk_builder_new();
     gtk_builder_add_from_file (builder_thong_bao, "Glade/menu_list_friend.glade", NULL);
 
     window_thong_bao = GTK_WIDGET(gtk_builder_get_object(builder_thong_bao, "thong_bao"));
+    thong_bao->grid_thong_bao = GTK_WIDGET(gtk_builder_get_object(builder_thong_bao, "grid_thong_bao"));
+    thong_bao->scrol_thong_bao = GTK_WIDGET(gtk_builder_get_object(builder_thong_bao, "scrol_thong_bao"));
+    thong_bao->lbl_null_thong_bao = GTK_WIDGET(gtk_builder_get_object(builder_thong_bao, "lbl_null_thong_bao"));
     gtk_builder_connect_signals(builder_thong_bao, NULL);
     //--
-    //gtk_window_set_decorated(GTK_WINDOW(window_signup),FALSE);
+    
+    if (db_list_friend->signal == SIGNAL_DB_LIST_FRIEND){
+            if(db_list_friend->list_friend.length_list_friend == 0){
+                gtk_widget_set_visible(thong_bao->scrol_thong_bao, FALSE);
+            }
+            else{
+                char id_thong_bao[5];
+                row_thong_bao = 0;
+                for(i = 0; i < db_list_friend->list_friend.length_list_friend; i++){
+                    if(db_list_friend->list_friend.list_friend[i].confirm == 0){
+                        sprintf(id_thong_bao,"%d",db_list_friend->list_friend.list_friend[i].ID);
+                        thong_bao->btn_thong_bao[row_thong_bao] = gtk_button_new_with_label(db_list_friend->list_friend.list_friend[i].name);
+                        gtk_widget_set_name(thong_bao->btn_thong_bao[row_thong_bao], id_thong_bao);
+                        g_signal_connect(thong_bao->btn_thong_bao[row_thong_bao],"clicked",G_CALLBACK(on_btn_thong_bao),thong_bao);
+                        gtk_grid_insert_row(GTK_GRID(thong_bao->grid_thong_bao),row_thong_bao);
+                        gtk_grid_attach(GTK_GRID(thong_bao->grid_thong_bao),thong_bao->btn_thong_bao[row_thong_bao],1,row_thong_bao,1,1);
+                        row_thong_bao++;
+                    }
+                    
+                }
+                if(row_thong_bao == 0){
+                    gtk_widget_set_visible(thong_bao->scrol_thong_bao, FALSE);
+                }else{
+                    gtk_widget_set_visible(thong_bao->lbl_null_thong_bao, FALSE);
+                    gtk_widget_show_all(thong_bao->scrol_thong_bao);
+                }
+                    
+            
+            }
+
+        }
     
     //--
     g_object_unref(builder_thong_bao);
@@ -97,7 +167,7 @@ int thong_bao(int argc, char **argv)
     gtk_widget_show(window_thong_bao);                
     gtk_main();
 
- 
+    g_slice_free(w_thong_bao, thong_bao);
     return 0;
 }
 
@@ -109,7 +179,7 @@ void on_thong_bao_destroy()
 }
 
 //----------------List friend-----------------
-void on_btn_list_friend(GtkButton *button);
+void on_btn_list_friend(GtkButton *button,w_list_friend *list_friend);
 
 //main
 int list_friend(int argc, char **argv)
@@ -127,44 +197,41 @@ int list_friend(int argc, char **argv)
     list_friends->lbl_err_add_friend = GTK_WIDGET(gtk_builder_get_object(builder_list_friend,"lbl_err_add_friend"));
     list_friends->scrol_list_friend = GTK_WIDGET(gtk_builder_get_object(builder_list_friend,"scrol_list_friend"));
     list_friends->grid_list_friend = GTK_WIDGET(gtk_builder_get_object(builder_list_friend,"grid_list_friend"));
+    list_friends->lbl_null_list_friend = GTK_WIDGET(gtk_builder_get_object(builder_list_friend,"lbl_null_list_friend"));
     gtk_builder_connect_signals(builder_list_friend, list_friends);
     
     //--
     //Object *obj_list_friend = (Object*)malloc(sizeof(Object));
     
-    obj_login_list_friend->signal = SIGNAL_RECV_LIST_FRIEND;
-    if(send(sockfd_friend,obj_login_list_friend,sizeof(Object), 0) < 0){
-        perror("send - list friend");
-        return 0;
-    }
-    Data_base *db_list_friend = (Data_base*)malloc(sizeof(Data_base));
-
-  
-        if(recv(sockfd_friend,db_list_friend,sizeof(Data_base), MSG_WAITALL) < 0){
-        perror("recv - list friend");
-        return 0;
-        }
+    
         if (db_list_friend->signal == SIGNAL_DB_LIST_FRIEND){
             if(db_list_friend->list_friend.length_list_friend == 0){
                 gtk_widget_set_visible(list_friends->scrol_list_friend, FALSE);
-                gtk_widget_set_visible(list_friends->lbl_null_list_friend, TRUE);
+                
             }
             else{
                 int i;
+                char id_friend[5];
                 int row =0;
                 for(i = 0; i < db_list_friend->list_friend.length_list_friend; i++){
                     if(db_list_friend->list_friend.list_friend[i].confirm == 1){
+                        sprintf(id_friend,"%d",db_list_friend->list_friend.list_friend[i].ID);
                         list_friends->btn_list_friend[row] = gtk_button_new_with_label(db_list_friend->list_friend.list_friend[i].name);
-                        gtk_widget_set_name(list_friends->btn_list_friend[row], db_list_friend->list_friend.list_friend[i].username);
-                        g_signal_connect(list_friends->btn_list_friend[row],"clicked",G_CALLBACK(on_btn_list_friend),NULL);
+                        gtk_widget_set_name(list_friends->btn_list_friend[row],id_friend);
+                        g_signal_connect(list_friends->btn_list_friend[row],"clicked",G_CALLBACK(on_btn_list_friend),list_friends);
                         gtk_grid_insert_row(GTK_GRID(list_friends->grid_list_friend),row);
                         gtk_grid_attach(GTK_GRID(list_friends->grid_list_friend),list_friends->btn_list_friend[row],1,row,1,1);
                         row++;
                     }
                     
                 }
-              
+                if(row == 0){
+                     gtk_widget_set_visible(list_friends->scrol_list_friend, FALSE);
+                }else{
+                    gtk_widget_set_visible(list_friends->lbl_null_list_friend, FALSE);
                     gtk_widget_show_all(list_friends->scrol_list_friend);
+                }
+                    
             
             }
 
@@ -184,7 +251,7 @@ int list_friend(int argc, char **argv)
     return 0;
 }
 
-void on_btn_list_friend(GtkButton *button){
+void on_btn_list_friend(GtkButton *button,w_list_friend *list_friend){
     g_print("name = %s , username = %s\n",gtk_button_get_label(button),
                  gtk_widget_get_name(GTK_WIDGET(button)));
 }
@@ -225,16 +292,16 @@ void on_btn_add_friend_clicked(GtkButton *b, w_list_friend *w_l_f){
 
 //----------confirm friend ------------
 //main
-int confirm_friend(int argc, char **argv)
+int confirm_friend(int argc, char **argv, w_thong_bao *thong_bao,int id_confirm_friend_ok)
 {
     GtkBuilder      *builder_confirm_friend; 
     gtk_init(&argc, &argv);
-
+    id_confirm_friend = id_confirm_friend_ok;
     builder_confirm_friend = gtk_builder_new();
     gtk_builder_add_from_file (builder_confirm_friend, "Glade/menu_list_friend.glade", NULL);
 
     window_confirm_friend = GTK_WIDGET(gtk_builder_get_object(builder_confirm_friend, "confirm_friend"));
-    gtk_builder_connect_signals(builder_confirm_friend, NULL);
+    gtk_builder_connect_signals(builder_confirm_friend, thong_bao);
     //--
     //gtk_window_set_decorated(GTK_WINDOW(window_signup),FALSE);
     
@@ -253,4 +320,54 @@ void on_confirm_friend_destroy()
 {
     gtk_widget_set_sensitive(window_thong_bao,TRUE);
     gtk_main_quit();
+}
+void delete_btn_friend(int id){
+    int i;
+    for (i = 0; i < db_list_friend->list_friend.length_list_friend; i++){
+        if(db_list_friend->list_friend.list_friend[i].ID == id){
+            int j;
+            for(j = i + 1; j < db_list_friend->list_friend.length_list_friend; j++){
+                db_list_friend->list_friend.list_friend[j-1] = db_list_friend->list_friend.list_friend[j];
+            }
+            db_list_friend->list_friend.length_list_friend--;
+            break;
+        }
+    }
+}
+void on_btn_chap_nhan_clicked(GtkButton *b, w_thong_bao *thongbao){
+    int i;
+    delete_btn_friend(id_confirm_friend);
+    for(i = 0;i < row_thong_bao; i++){
+        if(id_confirm_friend == atoi(gtk_widget_get_name(thongbao->btn_thong_bao[i]))){
+            gtk_widget_set_visible(thongbao->btn_thong_bao[i],FALSE);
+            obj_login_list_friend->add_member.ID = id_confirm_friend;
+            obj_login_list_friend->signal = SIGNAL_CONFIRM_FRIEND;
+            if(send(sockfd_friend, obj_login_list_friend, sizeof(Object), 0) < 0){
+                perror("send - confirm friend");
+                exit(0);
+            }
+            break;
+        }
+    }
+    gtk_widget_set_sensitive (window_thong_bao, TRUE);
+    gtk_window_close(GTK_WINDOW(window_confirm_friend));
+}
+
+void on_btn_khong_chap_nhan_clicked(GtkButton *b, w_thong_bao *thongbao){
+    int i;
+    delete_btn_friend(id_confirm_friend);
+    for(i = 0;i < row_thong_bao; i++){
+        if(id_confirm_friend == atoi(gtk_widget_get_name(thongbao->btn_thong_bao[i]))){
+            gtk_widget_set_visible(thongbao->btn_thong_bao[i],FALSE);
+            obj_login_list_friend->add_member.ID = id_confirm_friend;
+            obj_login_list_friend->signal = SIGNAL_NO_CONFIRM_FRIEND;
+            if(send(sockfd_friend, obj_login_list_friend, sizeof(Object), 0) < 0){
+                perror("send - confirm friend");
+                exit(0);
+            }
+            break;
+        }
+    }
+    gtk_widget_set_sensitive (window_thong_bao, TRUE);
+    gtk_window_close(GTK_WINDOW(window_confirm_friend));
 }

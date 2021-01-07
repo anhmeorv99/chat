@@ -6,6 +6,7 @@
     <property name="can_focus">False</property>
     <property name="title" translatable="yes">Chat</property>
     <property name="resizable">False</property>
+    <property name="window_position">center-always</property>
     <property name="default_width">440</property>
     <property name="default_height">250</property>
     <signal name="destroy" handler="on_app_chat_destroy" swapped="no"/>

@@ -81,6 +81,15 @@ Object *duplicate_object(Object *obj){
 				}
 			}
 			break;
+		case SIGNAL_CONFIRM_FRIEND:
+			new->signal = obj->signal;
+			break;
+		case SIGNAL_NO_CONFIRM_FRIEND:
+			new->signal = obj->signal;
+			break;
+		case SIGNAL_ADD_ROOM:
+			new->signal = obj->signal;
+			break;
 		case SIGNAL_ADD_FRIEND:
 			new->signal = obj->signal;
 			break;

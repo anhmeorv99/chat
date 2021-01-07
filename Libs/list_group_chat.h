@@ -6,7 +6,8 @@ typedef struct {
     GtkWidget *btn_group[100];
     GtkWidget *grid_list;
     GtkWidget *scrol_list;
-
+    GtkWidget *lbl_err_id;
+    GtkWidget *entry_id_room;
 }w_list_group;
 
 GtkWidget *window_group_chat;
@@ -14,12 +15,27 @@ GtkWidget *window_create_group_chat;
 int sockfd_group_chat;
 int argc_group_chat;
 char *argv_group_chat;
- 
+ gboolean check_list_group = FALSE;
+
+gboolean getCheckListGroup(){
+    return check_list_group;
+}
+
+void setCheckListGroup(){
+    if(getCheckListGroup() == FALSE)
+        check_list_group = TRUE;
+    else
+        check_list_group = FALSE;
+}
 
 int create_group_chat(int argc, char **argv);
 void on_btn_group(GtkButton *b){
-    int id_ = atoi(gtk_widget_get_name(GTK_WIDGET(b)));
-    chat_group(argc_group_chat,&argv_group_chat,sockfd_group_chat,id_);
+    if(getCheckChatGroup() == FALSE){
+        int id_ = atoi(gtk_widget_get_name(GTK_WIDGET(b)));
+        setCheckChatGroup();
+        chat_group(argc_group_chat,&argv_group_chat,sockfd_group_chat,id_);
+    }
+    
 }
 
 //---------------------------------
@@ -39,6 +55,8 @@ int list_group_chat(int argc, char **argv,int sockfd)
     list_group->grid_list = GTK_WIDGET(gtk_builder_get_object(builder_group_chat, "grid_list"));
     list_group->scrol_list = GTK_WIDGET(gtk_builder_get_object(builder_group_chat, "scrol_list"));
     list_group->lbl_null_list = GTK_WIDGET(gtk_builder_get_object(builder_group_chat, "lbl_null_list"));
+    
+    
     gtk_builder_connect_signals(builder_group_chat, list_group);
     //--
     //gtk_window_set_decorated(GTK_WINDOW(window_signup),FALSE);
@@ -46,12 +64,12 @@ int list_group_chat(int argc, char **argv,int sockfd)
          obj_list_group->signal = SIGNAL_RECV_LIST_GROUP;
     if(send(sockfd_group_chat,obj_list_group,sizeof(Object), 0) < 0){
         perror("send - list group");
-        return 0;
+        exit(0);
     }
     db_list_group = (Data_base*)malloc(sizeof(Data_base));
     if(recv(sockfd_group_chat,db_list_group,sizeof(Data_base), MSG_WAITALL) < 0){
         perror("recv - list group");
-        return 0;
+        exit(0);
         }
 
         if (db_list_group->signal == SIGNAL_RECV_DB_LIST_GROUP){
@@ -90,13 +108,14 @@ int list_group_chat(int argc, char **argv,int sockfd)
 // called when window is closed
 void on_list_group_chat_destroy()
 {
-    
+    setCheckListGroup();
     gtk_main_quit();
 }
 
 void on_btn_create_group_clicked(){
 	create_group_chat(argc_group_chat,&argv_group_chat);
 }
+
 
 
 //-----------------------create group chat----------------------------

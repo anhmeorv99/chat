@@ -28,7 +28,7 @@
           <object class="GtkLabel">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="label" translatable="yes">Log In</property>
+            <property name="label" translatable="yes">Đăng Nhập</property>
           </object>
           <packing>
             <property name="expand">False</property>
@@ -61,7 +61,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="halign">start</property>
-                <property name="label" translatable="yes">Username</property>
+                <property name="label" translatable="yes">Tài Khoản</property>
                 <attributes>
                   <attribute name="weight" value="bold"/>
                 </attributes>
@@ -131,7 +131,7 @@
                 <property name="can_focus">False</property>
                 <property name="halign">start</property>
                 <property name="valign">start</property>
-                <property name="label" translatable="yes">Password</property>
+                <property name="label" translatable="yes">Mật Khẩu</property>
                 <attributes>
                   <attribute name="weight" value="bold"/>
                 </attributes>
@@ -201,7 +201,7 @@
             </child>
             <child>
               <object class="GtkButton" id="login_btn_login">
-                <property name="label" translatable="yes">Log In</property>
+                <property name="label" translatable="yes">Đăng nhập</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -215,7 +215,7 @@
             </child>
             <child>
               <object class="GtkButton" id="login_btn_cance">
-                <property name="label" translatable="yes">Cance</property>
+                <property name="label" translatable="yes">Thoát</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
