@@ -21,39 +21,40 @@ typedef enum {
 
 typedef struct {
 	int id;
-	char username[20];
-	char name[20];
-	char password[20];
+	char username[10];
+	char name[10];
+	char password[10];
 	Error err;
 }Login;
 
 typedef struct {
-	char name[20];
-	char username[20];
-	char password[20];
-	char re_password[20];
+	char name[10];
+	char username[10];
+	char password[10];
+	char re_password[10];
 }Signup;
 
 typedef struct {
-	char from_name[20];
-	char to_name[20];
-	char from_username[20];
+	char from_name[10];
+	char to_name[10];
+	char from_username[10];
 	int from_id;
 	int to_id;
-	char to_username[20];
-	char message[100];
-	char create_at[20];
+	char to_username[10];
+	char message[50];
+	char create_at[10];
 }Chat_Private;
 
 typedef struct {
-	char username[20];
-	char new_password[20];
-	char cur_password[20];
+	char username[10];
+	char new_password[10];
+	char cur_password[10];
 }Change_Password;
 
 typedef struct {
-	char username[20];
-	char username_friend[20];
+	int ID;
+	char name_friend[10];
+	char username_friend[10];
 }Add_Friend;
 typedef struct {
 	int ID_Room;
@@ -67,8 +68,9 @@ typedef struct {
 typedef struct{
 	Error err;
 	int ID;
-	char name[30];
-	char username[30];
+	int ID_Room;
+	char name[10];
+	char username[10];
 }Add_Member;
 typedef struct {
 	Signals signal;

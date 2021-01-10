@@ -125,16 +125,23 @@ typedef struct {
 	Chat_Private_ chat_private;
 }Data_base;
 
-Data_base *getListFriend(char* element);
+Data_base *getListFriend(int id);
 
 Data_base * getGroup(char* element);
 
 Data_base *getMessagePrivate(int from_user, int to_user);
 Data_base *getMessageGroup(int room);
 
-friend_db getFriend(Friend friend);
+friend_db getFriend(Friend friend, int mode);
+void update_confirm_friend(int user, int friend);
 
 member_db getMember(int id);
+int updateMember(int room,int member);
+void requestData(char*url, char*data, char* method);
+
+void create_room(char* name, int admin_room);
+void add_friend(int user, char* username);
+
 
 message_db getOneMessageGroup(Message message,user_db from_profile);
 message_db getOneMessagePrivate(MessagePrivate message,user_db from_profile, user_db to_profile);
@@ -142,17 +149,8 @@ message_db getOneMessagePrivate(MessagePrivate message,user_db from_profile, use
 char *convert_struct_to_json_message(int from_user, char* message, int room);
 void postMessage(int from_user, int to_user, char* message);
 void postMessageGroup(int from_user,char* message, int room);
-// Chat_Private_ getChatPrivate(message_db message, int index);
-
-
-group_db getGroupDB(Room room, member_db member, message_db message, int index_member, int index_message);
-
-int get_id_room_private(char* username1, char* username2);
 
 user_db getUserDB(User user);
-
-// Data_base getDatabase(user_db user, friend_db *friend, int len_friend, Chat_Private_ *chat_private, 
-// 						int len_chat_private, group_db *group, int len_group);
 
 int check_user(char* username);
 
