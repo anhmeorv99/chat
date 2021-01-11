@@ -84,8 +84,7 @@ Data_base *getListFriend(int id){
 // length
 	length_eltype = json_object_array_length(parsed_json);
 	length_eltype1 =  json_object_array_length(parsed_json1);
-	database->list_friend.length_list_friend = length_eltype + length_eltype1;
-
+	int dem = 0;
 // data ?user=%d
 	if (length_eltype>0){
 		for(i=0;i<length_eltype;i++) {
@@ -94,7 +93,10 @@ Data_base *getListFriend(int id){
 		json_object_object_get_ex(elementType, "friend", &item._friend);
 		json_object_object_get_ex(elementType, "confirm", &item.confirm);
 		json_object_object_get_ex(elementType, "user", &item.user);
-		database->list_friend.list_friend[i] = getFriend(item, 1);
+		if(json_object_get_boolean(item.confirm) == TRUE){
+			database->list_friend.list_friend[dem] = getFriend(item, 1);
+			dem++;
+			}
 		}	
 	}
 
@@ -105,10 +107,10 @@ Data_base *getListFriend(int id){
 		json_object_object_get_ex(elementType1, "friend", &item._friend);
 		json_object_object_get_ex(elementType1, "confirm", &item.confirm);
 		json_object_object_get_ex(elementType1, "user", &item.user);
-		database->list_friend.list_friend[i+length_eltype] = getFriend(item, 0);
+		database->list_friend.list_friend[i+dem] = getFriend(item, 0);
 		}	
 	}
-
+		database->list_friend.length_list_friend = dem + length_eltype1;
 	return database;
 
 }
@@ -136,8 +138,8 @@ friend_db getFriend(Friend friend, int mode){
 }
 
 void requestData(char*url, char*data, char* method){
-		CURL *curl;
-	CURLcode res;
+	CURL *curl;
+	CURLcode res = CURLE_OK;
 	curl = curl_easy_init();
 	curl_global_init(CURL_GLOBAL_ALL);
 	 if(curl) {
@@ -147,12 +149,16 @@ void requestData(char*url, char*data, char* method){
 			
 			curl_easy_setopt(curl, CURLOPT_URL, url);
 			curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, method);
-			curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data);
+			if (data!=NULL){
+				curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data);
+			}
 			res = curl_easy_perform(curl);
 			if(res != CURLE_OK)
 			fprintf(stderr, "curl_easy_perform() failed: %s\n",
 					curl_easy_strerror(res));
 			curl_easy_cleanup(curl);
+			curl_slist_free_all(chunk);
+			return;
 		}
 	
 }
@@ -165,7 +171,46 @@ void create_room(char* name, int admin_room){
 	requestData(url, data, "POST");
 }
 
-
+int check_friend(int id_user, int id_friend){
+	Friend item;
+	char* url = (char*)malloc(100*sizeof(char));
+	char* url1 = (char*)malloc(100*sizeof(char));
+	char* buffer = (char*)malloc(100*sizeof(char));
+	char* buffer1 = (char*)malloc(100*sizeof(char));
+	sprintf(url, "http://127.0.0.1:8000/api/friends/?user=%d&friend=%d",id_user, id_friend);
+	sprintf(url1, "http://127.0.0.1:8000/api/friends/?user=%d&friend=%d",id_friend, id_user);
+	buffer = handle_url(url);
+	buffer1 = handle_url(url1);
+	int length_eltype,i;
+	struct json_object *parsed_json;
+	struct json_object *elementType;
+	if (buffer){
+		parsed_json = json_tokener_parse(buffer);
+		length_eltype = json_object_array_length(parsed_json);
+		if (length_eltype>0){
+			for(i=0;i<length_eltype;i++) {
+				elementType = json_object_array_get_idx(parsed_json, i);
+				json_object_object_get_ex(elementType, "confirm", &item.confirm);
+				if (json_object_get_boolean(item.confirm)==FALSE) return 2; // cho xac nhan
+				else return 1; // la ban be	
+			}
+		}
+	} 
+	if (buffer1){
+		parsed_json = json_tokener_parse(buffer1);
+		length_eltype = json_object_array_length(parsed_json);
+		if (length_eltype>0){
+			for(i=0;i<length_eltype;i++) {
+				elementType = json_object_array_get_idx(parsed_json, i);
+				json_object_object_get_ex(elementType, "confirm", &item.confirm);
+				if (json_object_get_boolean(item.confirm)==FALSE) return 2; // cho xac nhan
+				else return 1; // la ban be	
+			}
+		}
+	}
+	
+	return -1;
+}
 
 void update_confirm_friend(int user, int friend){
 
@@ -197,6 +242,34 @@ void update_confirm_friend(int user, int friend){
 
 } 
 
+void delete_confirm_friend(int user, int friend){
+
+	Friend item_user;
+	char* url_user = (char*)malloc(100*sizeof(char));
+	char* buffer_user = (char*)malloc(100*sizeof(char));
+
+	char* url_update_user = (char*)malloc(100*sizeof(char));
+
+	int i, length_eltype;
+
+	sprintf(url_user, "http://127.0.0.1:8000/api/friends/?user=%d&friend=%d",friend,user);
+	buffer_user = handle_url(url_user);
+	struct json_object *parsed_json;
+	struct json_object *elementType;
+	if (buffer_user){
+		parsed_json = json_tokener_parse(buffer_user);
+		length_eltype = json_object_array_length(parsed_json);
+		if (length_eltype>0){
+			for(i=0;i<length_eltype;i++) {
+			elementType = json_object_array_get_idx(parsed_json, i);
+			json_object_object_get_ex(elementType, "id", &item_user.id);
+			}	
+		}
+		sprintf(url_update_user, "http://127.0.0.1:8000/api/friends/%d/",json_object_get_int(item_user.id));
+	}		
+	requestData(url_update_user, NULL, "DELETE");
+
+} 
 
 member_db getMember(int id){
 	member_db Eltype;
@@ -331,10 +404,9 @@ void postMessageGroup(int from_user,char* message, int room){
 }
 
 
-void add_friend(int user, char* username){
+void add_friend(int user, int friend){
 	char* data = (char*)malloc(100*sizeof(char));
-	user_db profile = getUser(username, -1);
-	sprintf(data,"{\"user\": %d, \"friend\": %d, \"confirm\": false}",user, profile.ID_user);
+	sprintf(data,"{\"user\": %d, \"friend\": %d, \"confirm\": false}",user, friend);
 	requestData("http://127.0.0.1:8000/api/friends/",data, "POST");
 }
 
@@ -732,11 +804,14 @@ void loginStatus(char* username,int status){
 }
 // int main(int argc, char **argv) {
 // 	// Data_base *db = (Data_base*)malloc(sizeof(Data_base));
-// 	// db = getListFriend(1);
+// 	// db = getListFriend(7);
 // 	// int i;
+// 	// printf("len = %d \n", db->list_friend.length_list_friend);
 // 	// for (i=0; i< db->list_friend.length_list_friend; i++){
 // 	// 	printf("id friend: %d \n", db->list_friend.list_friend[i].ID);
 // 	// }
-// 	add_friend(3,"anh.nt");
+// 	delete_confirm_friend(2,7);
+// 	// int check = check_friend(1,111);
+// 	// printf("check = %d", check);
 // 	return 1;
 // }

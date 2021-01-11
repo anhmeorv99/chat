@@ -18,7 +18,9 @@ enum Error_ {
 	ERR_NOT_RE_PASSWORD,		//re-password khong giong
 	ERR_USERNAME_LOGIN,		//username dang dang nhap
 	ERR_FULL_MEMBER,		//thanh vien day
-	ERR_CAN_NOT_ID_ROOM		//id room khong ton tai
+	ERR_CAN_NOT_ID_ROOM,		//id room khong ton tai
+	ERR_DANG_XAC_NHAN,		// dang xac nhan
+	ERR_LA_BAN_BE			// la ban be
 };
 
 typedef enum Error_ Error;

@@ -8,17 +8,30 @@
 #include <unistd.h>
 #include "../src/application.h"
 #include <pthread.h>
-
+#include <signal.h>
+int sockfd;
 int checkIP(char *str);
 int checkNumber(char *str);
 
+void catch_ctrl_c(int sig){
+    
+    Object *obj = (Object*)malloc(sizeof(Object));
+    obj->signal = SIGNAL_LOGUOT;
+    strcpy(obj->login.username, obj_login->login.username);
+    if (send(sockfd, obj, sizeof(Object), 0) < 0){
+        perror("error send ctrl + C");
+        exit(0);
+    }
+    close(sockfd);
+    exit(0);
 
+}
 
 int main(int argc, char **argv){
-    int sockfd, port;
+    int port;
     struct sockaddr_in servaddr;
     socklen_t len_serv;
- 
+    signal(SIGINT, catch_ctrl_c);
     
     if(argc != 3){
         printf("Error: cu phap khong hop le!\n");

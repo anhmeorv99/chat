@@ -1,6 +1,6 @@
 #include "error_invalid.h"
 #include <string.h>
-#define NUM_ERROR 19
+#define NUM_ERROR 21
 #define NUM_INVALID 4
 #define INVALID_USERNAME "ABC"
 struct Error_Message_ {
@@ -36,7 +36,9 @@ Error_Message error_message[NUM_ERROR] = {
 	{ERR_NOT_RE_PASSWORD,"Confirm Password khong dung!"},
 	{ERR_USERNAME_LOGIN,"Username dang dang nhap!"},
 	{ERR_FULL_MEMBER,"Thanh vien day!"},
-	{ERR_CAN_NOT_ID_ROOM,"Id room khong ton tai!"}
+	{ERR_CAN_NOT_ID_ROOM,"Id room khong ton tai!"},
+	{ERR_DANG_XAC_NHAN,"Tai Khoan dang cho xac nhan!"},
+	{ERR_LA_BAN_BE,"Tai khoan da la ban be!"}
 };
 
 Invalid_Message invalid_message[NUM_INVALID] = {

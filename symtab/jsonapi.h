@@ -140,7 +140,8 @@ int updateMember(int room,int member);
 void requestData(char*url, char*data, char* method);
 
 void create_room(char* name, int admin_room);
-void add_friend(int user, char* username);
+void add_friend(int user, int friend);
+void delete_confirm_friend(int user, int friend);
 
 
 message_db getOneMessageGroup(Message message,user_db from_profile);
@@ -153,6 +154,7 @@ void postMessageGroup(int from_user,char* message, int room);
 user_db getUserDB(User user);
 
 int check_user(char* username);
+int check_friend(int id_user, int id_friend);
 
 user_db getUser(char* username,int id);
 
