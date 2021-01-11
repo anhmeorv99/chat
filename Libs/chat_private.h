@@ -110,6 +110,11 @@ void on_btn_list_friend_private(GtkButton *button,app_widgets *widg){
                     gtk_text_buffer_insert(widg->text_buffer_view,&iter,db_recv_chat_private->chat_private.msg_private[i].message,-1);
                     
          }
+         GtkTextIter end;
+         GtkTextMark *mark;
+         gtk_text_buffer_get_end_iter(widg->text_buffer_view,&end);
+         mark = gtk_text_buffer_create_mark(widg->text_buffer_view,NULL,&end,FALSE);
+         gtk_text_view_scroll_to_mark(widg->txtvw_show, mark,0,FALSE,0,0);
     }
   
 }
@@ -125,7 +130,7 @@ void recv_to_friend(void *app){
 
     while(1){
             GtkTextIter iter;
-            recv_chat = recv(sock_chat_private,obj,sizeof(Object),0);
+            recv_chat = recv(sock_chat_private,obj,sizeof(Object),MSG_WAITALL);
             if(recv_chat < 0 ){
                 perror("recv chat private");
                 exit(0);
@@ -147,6 +152,11 @@ void recv_to_friend(void *app){
                         gtk_text_buffer_insert_markup(widg->text_buffer_view,&iter,markup_message,-1);
                         gtk_text_buffer_get_end_iter(gtk_text_view_get_buffer(widg->txtvw_show),&iter);
                         gtk_text_buffer_insert(widg->text_buffer_view,&iter,obj->chat_private.message,-1); 
+                        // GtkTextIter end;
+                        // GtkTextMark *mark;
+                        // gtk_text_buffer_get_end_iter(widg->text_buffer_view,&end);
+                        // mark = gtk_text_buffer_create_mark(widg->text_buffer_view,NULL,&end,FALSE);
+                        // gtk_text_view_scroll_to_mark(widg->txtvw_show, mark,0,FALSE,0,0);
                     }
                     
                 }
@@ -247,6 +257,7 @@ void on_window_chat_destroy()
 
 void on_chat_send_clicked(GtkButton *button, app_widgets *widg){
     GtkTextIter start, end, iter;
+    GtkTextMark *mark;
     GDateTime *date_time;
     char *markup_message;
     gchar *send_name_dtime;
@@ -271,6 +282,7 @@ void on_chat_send_clicked(GtkButton *button, app_widgets *widg){
     obj_chat_private->chat_private.from_id = obj_chat_private->login.id;
     
     strcpy(obj_chat_private->chat_private.to_name, gtk_label_get_text(GTK_LABEL(widg->lbl_name_friend)));
+    obj_chat_private->signal = SIGNAL_CHAT_PRIVATE;
     if(send(sock_chat_private,obj_chat_private,sizeof(Object),0) < 0){
         perror("send - chat private");
         exit(0);
@@ -282,6 +294,10 @@ void on_chat_send_clicked(GtkButton *button, app_widgets *widg){
     gtk_text_buffer_insert(widg->text_buffer_view,&iter,gtk_text_buffer_get_text(
         gtk_text_view_get_buffer(widg->text_write),&start,&end,FALSE),-1);
     gtk_text_view_set_buffer(widg->text_write,gtk_text_buffer_new(NULL));
+    //scroll bottom
+    gtk_text_buffer_get_end_iter(widg->text_buffer_view,&end);
+    mark = gtk_text_buffer_create_mark(widg->text_buffer_view,NULL,&end,FALSE);
+    gtk_text_view_scroll_to_mark(widg->txtvw_show, mark,0,FALSE,0,0);
 
 }
 

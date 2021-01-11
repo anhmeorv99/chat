@@ -730,13 +730,13 @@ void loginStatus(char* username,int status){
 		}
 	free(url);
 }
-int main(int argc, char **argv) {
-	// Data_base *db = (Data_base*)malloc(sizeof(Data_base));
-	// db = getListFriend(1);
-	// int i;
-	// for (i=0; i< db->list_friend.length_list_friend; i++){
-	// 	printf("id friend: %d \n", db->list_friend.list_friend[i].ID);
-	// }
-	add_friend(3,"anh.nt");
-	return 1;
-}
+// int main(int argc, char **argv) {
+// 	// Data_base *db = (Data_base*)malloc(sizeof(Data_base));
+// 	// db = getListFriend(1);
+// 	// int i;
+// 	// for (i=0; i< db->list_friend.length_list_friend; i++){
+// 	// 	printf("id friend: %d \n", db->list_friend.list_friend[i].ID);
+// 	// }
+// 	add_friend(3,"anh.nt");
+// 	return 1;
+// }

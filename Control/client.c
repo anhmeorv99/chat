@@ -30,10 +30,10 @@ int main(int argc, char **argv){
         printf("Error: parameter1 (ip address) khong hop le!\n");
         return 0;
     }
-    if(strcmp(argv[1],"127.0.0.1") != 0){
-        printf("Loi khuyen nen dung IP address : 127.0.0.1\n");
-        return 0;
-    }
+    // if(strcmp(argv[1],"127.0.0.1") != 0){
+    //     printf("Loi khuyen nen dung IP address : 127.0.0.1\n");
+    //     return 0;
+    // }
     if(checkNumber(argv[2]) == 0){
         printf("Error: parameter2 (port) phai la so!\n");
         return 0;

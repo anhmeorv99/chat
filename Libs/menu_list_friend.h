@@ -267,12 +267,9 @@ void on_btn_add_friend_clicked(GtkButton *b, w_list_friend *w_l_f){
     const char *format_error = "<span foreground='red'>%s</span>";
     char *markup_message;
     Error err_add_friend;
-    Object *obj = (Object*)malloc(sizeof(Object));
-    obj->signal = SIGNAL_ADD_FRIEND;
-    strcpy(obj->add_friend.username,gtk_entry_get_text(GTK_ENTRY(w_l_f->entry_add_friend)));
-    strcpy(obj->add_friend.username_friend, obj_login_list_friend->login.username);
+    
     gtk_widget_set_visible(w_l_f->lbl_err_add_friend,FALSE);
-    if(strlen(obj->add_friend.username) == 0){
+    if(strlen(gtk_entry_get_text(GTK_ENTRY(w_l_f->entry_add_friend))) == 0){
         char err_msg[100];
         err_add_friend = ERR_NULL_USERNAME;
         gtk_widget_set_visible(w_l_f->lbl_err_add_friend,TRUE);
@@ -281,13 +278,14 @@ void on_btn_add_friend_clicked(GtkButton *b, w_list_friend *w_l_f){
         gtk_label_set_markup(GTK_LABEL(w_l_f->lbl_err_add_friend),markup_message);
         g_free(markup_message);
     }else{
-        /*
-        if(send(sockfd_friend,obj,sizeof(Object),0) < 0){
+        strcpy(obj_login_list_friend->add_friend.username_friend, gtk_entry_get_text(GTK_ENTRY(w_l_f->entry_add_friend)));
+        obj_login_list_friend->signal =SIGNAL_ADD_FRIEND;
+    
+        if(send(sockfd_friend,obj_login_list_friend,sizeof(Object),0) < 0){
             perror("Err: listfriend");
-            return;
-        }*/
+           exit(0);
+        }
     }
-    free(obj);
 }
 
 //----------confirm friend ------------
@@ -336,12 +334,23 @@ void delete_btn_friend(int id){
 }
 void on_btn_chap_nhan_clicked(GtkButton *b, w_thong_bao *thongbao){
     int i;
-    delete_btn_friend(id_confirm_friend);
+    for(i = 0; i < db_list_friend->list_friend.length_list_friend; i++){
+        if(db_list_friend->list_friend.list_friend[i].ID == id_confirm_friend ){
+            db_list_friend->list_friend.list_friend[i].confirm = 1;
+            break;
+        }
+    }
     for(i = 0;i < row_thong_bao; i++){
         if(id_confirm_friend == atoi(gtk_widget_get_name(thongbao->btn_thong_bao[i]))){
             gtk_widget_set_visible(thongbao->btn_thong_bao[i],FALSE);
+            
             obj_login_list_friend->add_member.ID = id_confirm_friend;
             obj_login_list_friend->signal = SIGNAL_CONFIRM_FRIEND;
+            row_thong_bao--;
+            if(row_thong_bao == 0){
+                gtk_widget_set_visible(thongbao->lbl_null_thong_bao,TRUE);
+                gtk_widget_set_visible(thongbao->scrol_thong_bao, FALSE);
+            }
             if(send(sockfd_friend, obj_login_list_friend, sizeof(Object), 0) < 0){
                 perror("send - confirm friend");
                 exit(0);

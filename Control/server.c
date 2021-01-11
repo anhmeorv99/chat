@@ -115,7 +115,7 @@ int main(int argc, char **argv){
     bzero(&servaddr,sizeof(servaddr));
     servaddr.sin_family = AF_INET;
     servaddr.sin_port = htons(port);
-    servaddr.sin_addr.s_addr = inet_addr("127.0.0.1");//htonl(INADDR_ANY);
+    servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
 
     len_serv = sizeof(servaddr);
 
@@ -179,13 +179,15 @@ int main(int argc, char **argv){
             }
             for(i = 0; i<= maxi;i++){
                 int sock_cl;
-
+                    if (connfd < 7){
                         buff_check_server = handle_url(check_url);
                         if (buff_check_server==NULL) {
                             free(buff_check_server);
                             close(sockfd);
                             return 0;
+                        }
                     }
+                        
                 if((sock_cl = client[i]) < 0) continue;
                 if(FD_ISSET(sock_cl,&readfds)){   
                     Object *obj = (Object*)malloc(sizeof(Object));
@@ -332,8 +334,6 @@ int main(int argc, char **argv){
                             Object *obj_chat_private;
                             while(cur_chat != NULL){
                                 if(cur_chat->element.id==obj->chat_private.to_id){
-                                    //char message_[250];
-                                    //sprintf(message_,"[%s]:\n%s",obj->chat_private.from_username,obj->chat_private.message);
                                     obj_chat_private = duplicate_object(obj);
                                     if(send(cur_chat->element.sockfd,obj_chat_private, 
                                         sizeof(Object),0)<0){
@@ -374,18 +374,10 @@ int main(int argc, char **argv){
                         case SIGNAL_RECV_LIST_FRIEND:
                         {
                                 printf("-----------recv list friend\n");
-                            Data_base *db_list_friend = (Data_base*)malloc(sizeof(Data_base));
-                            
-                            user_db user = getUser(obj->login.username, -1);
+                                Data_base *db_list_friend = (Data_base*)malloc(sizeof(Data_base));                
+                                db_list_friend = getListFriend(obj->login.id);
                            
-                            char* url = (char*)malloc(200*sizeof(char));
-                            sprintf(url, "http://127.0.0.1:8000/api/friends/?user=%d", user.ID_user);
-                            char* buffer = handle_url(url);
-                            if (buffer){
-                                db_list_friend =getListFriend(buffer);
-                              
                                 db_list_friend->signal = SIGNAL_DB_LIST_FRIEND;
-                            }
 
                             if(send(sock_cl,db_list_friend,sizeof(Data_base),0) < 0){
                                 printf("ERROR! In socket %d\n",sock_cl);
@@ -402,19 +394,10 @@ int main(int argc, char **argv){
                             printf("-----------recv list friend private\n");
                             Data_base *db_list_friend = (Data_base*)malloc(sizeof(Data_base));
                             
-                            user_db user = getUser(obj->login.username, -1);
-                            
-                            char* url = (char*)malloc(200*sizeof(char));
-                            sprintf(url, "http://127.0.0.1:8000/api/friends/?user=%d", user.ID_user);
-                            char* buffer = handle_url(url);
             
-                            if (buffer){
-                                db_list_friend =getListFriend(buffer);
+                                db_list_friend =getListFriend(obj->login.id);
                             
-                                db_list_friend->signal = SIGNAL_DB_LIST_FRIEND_PRIVATE;
-                            }
-                          
-                
+                                db_list_friend->signal = SIGNAL_DB_LIST_FRIEND_PRIVATE;                          
 
                             if(send(sock_cl,db_list_friend,sizeof(Data_base),0) < 0){
                                 printf("ERROR! In socket %d\n",sock_cl);
@@ -451,12 +434,6 @@ int main(int argc, char **argv){
                                 db = getGroup(buffer);
 
                             }
-                            // for(i = 0; i < db->list_group.length_group;i++){
-                            //     for (j=0;j<db->list_group.group[i].length_msg_public;j++){
-
-                            //         printf("group :%ld , message : %s \n", i, db->list_group.group[i].msg_public[j].message);
-                            //     }
-	                        // }
                             db->signal = SIGNAL_RECV_DB_LIST_GROUP;
                             if(send(sock_cl,db,sizeof(Data_base),0) < 0){
                                 printf("ERROR! In socket 123 %d\n",sock_cl);
@@ -475,21 +452,36 @@ int main(int argc, char **argv){
                                 obj->add_member.err = ERR_NOT_USERNAME;
                                 
                             } else {
-                                user_db user = getUser(obj->add_member.username, -1);
-                                strcpy(obj->add_member.name, user.name);
-                                obj->add_member.ID = user.ID_user;
-                                obj->add_member.err = ERR_NONE;
-                                //---them member vao database
+                                int check_update = 3;
+                                // user_db user = getUser(obj->add_member.username, -1);
+                                // strcpy(obj->add_member.name, user.name);
+                                // obj->add_member.ID = user.ID_user;
+                                // printf("user id : %d\n", user.ID_user);
+                                // printf("room_id : %d, member_id %d: \n", obj->add_member.ID_Room, obj->add_member.ID );
+                                 obj->add_member.err = ERR_NONE;
+                                // int check_update = updateMember(1, 6);
+                                printf("checkupdate = %d ", check_update);
+                                if (check_update == 1) obj->add_member.err = ERR_NONE;
+                                else if (check_update == 3){
+                                    printf("check update = 3\n");
+                                     obj->add_member.err = ERR_HAS_USERNAME;
+                                } else if (check_update == 2){
+                                    printf("check update = 2\n");
+                                    obj->add_member.err = ERR_FULL_MEMBER;
+                                } else{
+                                    printf("cant update server \n");
+                                    return 0;
+                                }
+                                
                             }
                             if(send(sock_cl,obj,sizeof(Object),0) < 0){
-
+                                return 0;
                             }
                             break;
                         }
                         case SIGNAL_CONFIRM_FRIEND:
                         {
-                            // update status friend
-                            
+                            update_confirm_friend(obj->login.id, obj->add_member.ID);
                             break;
                         }
                         case SIGNAL_NO_CONFIRM_FRIEND:
