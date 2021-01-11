@@ -326,7 +326,7 @@ int main(int argc, char **argv){
                         }
                         case SIGNAL_CHAT_PRIVATE:
                             printf("-----------chat private\n");
-                            printf("%s : %s\n",obj->chat_private.from_username,obj->chat_private.message);
+                            printf("%s : %s\n",obj->chat_private.from_name,obj->chat_private.message);
                             
                             postMessage(obj->chat_private.from_id, obj->chat_private.to_id,obj->chat_private.message);
                     
@@ -419,8 +419,31 @@ int main(int argc, char **argv){
                             break;
                         }
                         case SIGNAL_ADD_FRIEND:
-                            
-                            break;
+                            {
+                                int check_user_ = check_user(obj->add_friend.username_friend);
+                                if (check_user_ == 1){
+                                    user_db user = getUser(obj->add_friend.username_friend, -1);
+                                    int check_friend_ = check_friend(obj->login.id, user.ID_user);
+                                    if (check_friend_ == 2){
+                                        obj->add_friend.err = ERR_DANG_XAC_NHAN;
+                                    }else if (check_friend_ == 1){
+                                        obj->add_friend.err = ERR_LA_BAN_BE;
+                                    } else {
+                                            obj->add_friend.ID = user.ID_user;
+                                            strcpy(obj->add_friend.name_friend, user.name);
+                                            obj->add_friend.err = ERR_NONE;
+                                            add_friend(obj->login.id, user.ID_user);
+                                    }
+                                    
+                                } else obj->add_friend.err = ERR_NOT_USERNAME;
+                                
+                               if (send(sock_cl, obj, sizeof(Object), 0) < 0 ){
+                                   perror("send addfriend");
+                                   return 0;
+                               }
+
+                                break;
+                            }
                         case SIGNAL_RECV_LIST_GROUP:
                         {
                             printf("-----------SIGNAL_RECV_LIST_GROUP\n");
@@ -486,7 +509,7 @@ int main(int argc, char **argv){
                         }
                         case SIGNAL_NO_CONFIRM_FRIEND:
                         {
-                            // delete friend 
+                            delete_confirm_friend(obj->login.id, obj->add_member.ID);
                             break;
                         }
                         case SIGNAL_LOGUOT:

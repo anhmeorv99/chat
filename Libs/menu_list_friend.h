@@ -24,6 +24,7 @@ int argc_friend;
 char *argv_friend;
 int id_confirm_friend;
 int row_thong_bao;
+int row_list_friend;
 Data_base *db_list_friend;
 Object *obj_login_list_friend;
 gboolean check_menu_list_friend = FALSE;
@@ -212,20 +213,20 @@ int list_friend(int argc, char **argv)
             else{
                 int i;
                 char id_friend[5];
-                int row =0;
+                row_list_friend = 0;
                 for(i = 0; i < db_list_friend->list_friend.length_list_friend; i++){
                     if(db_list_friend->list_friend.list_friend[i].confirm == 1){
                         sprintf(id_friend,"%d",db_list_friend->list_friend.list_friend[i].ID);
-                        list_friends->btn_list_friend[row] = gtk_button_new_with_label(db_list_friend->list_friend.list_friend[i].name);
-                        gtk_widget_set_name(list_friends->btn_list_friend[row],id_friend);
-                        g_signal_connect(list_friends->btn_list_friend[row],"clicked",G_CALLBACK(on_btn_list_friend),list_friends);
-                        gtk_grid_insert_row(GTK_GRID(list_friends->grid_list_friend),row);
-                        gtk_grid_attach(GTK_GRID(list_friends->grid_list_friend),list_friends->btn_list_friend[row],1,row,1,1);
-                        row++;
+                        list_friends->btn_list_friend[row_list_friend] = gtk_button_new_with_label(db_list_friend->list_friend.list_friend[i].name);
+                        gtk_widget_set_name(list_friends->btn_list_friend[row_list_friend],id_friend);
+                        g_signal_connect(list_friends->btn_list_friend[row_list_friend],"clicked",G_CALLBACK(on_btn_list_friend),list_friends);
+                        gtk_grid_insert_row(GTK_GRID(list_friends->grid_list_friend),row_list_friend);
+                        gtk_grid_attach(GTK_GRID(list_friends->grid_list_friend),list_friends->btn_list_friend[row_list_friend],1,row_list_friend,1,1);
+                        row_list_friend++;
                     }
                     
                 }
-                if(row == 0){
+                if(row_list_friend == 0){
                      gtk_widget_set_visible(list_friends->scrol_list_friend, FALSE);
                 }else{
                     gtk_widget_set_visible(list_friends->lbl_null_list_friend, FALSE);
@@ -265,6 +266,7 @@ void on_list_friend_destroy()
 
 void on_btn_add_friend_clicked(GtkButton *b, w_list_friend *w_l_f){
     const char *format_error = "<span foreground='red'>%s</span>";
+    const char *format_invalid = "<span foreground='blue'>%s</span>";
     char *markup_message;
     Error err_add_friend;
     
@@ -284,6 +286,27 @@ void on_btn_add_friend_clicked(GtkButton *b, w_list_friend *w_l_f){
         if(send(sockfd_friend,obj_login_list_friend,sizeof(Object),0) < 0){
             perror("Err: listfriend");
            exit(0);
+        }
+        Object *obj_add_friend = (Object*)malloc(sizeof(Object));
+        if(recv(sockfd_friend, obj_add_friend, sizeof(Object), 0) < 0){
+            perror(" recv add friend");
+            exit(0);
+        }
+        if(obj_add_friend->signal == SIGNAL_ADD_FRIEND){
+            if(obj_add_friend->add_friend.err == ERR_NONE){
+                char msg[] = "Da gui yeu cau ket ban.";
+                gtk_widget_set_visible(w_l_f->lbl_err_add_friend,TRUE);
+                markup_message = g_markup_printf_escaped(format_invalid,msg);
+                gtk_label_set_markup(GTK_LABEL(w_l_f->lbl_err_add_friend),markup_message);
+                g_free(markup_message);
+            }else{
+                char err_msg[100];
+                gtk_widget_set_visible(w_l_f->lbl_err_add_friend,TRUE);
+                error_to_string(obj_add_friend->add_friend.err,err_msg);
+                markup_message = g_markup_printf_escaped(format_error,err_msg);
+                gtk_label_set_markup(GTK_LABEL(w_l_f->lbl_err_add_friend),markup_message);
+                g_free(markup_message);
+            }
         }
     }
 }
