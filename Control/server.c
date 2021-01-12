@@ -195,9 +195,10 @@ int main(int argc, char **argv){
                         printf("ERROR! In socket %d\n",sock_cl);
                         perror("recv - message");
                         client[i] = -1;
+                        root = delete_node(root,sock_cl);
                         FD_CLR(sock_cl,&masterfds);
                         close(sock_cl);
-                        return 0;
+                        continue;
                     }  
                                   
                     switch(obj->signal){
@@ -253,9 +254,10 @@ int main(int argc, char **argv){
                                     printf("ERROR! In socket %d\n",sock_cl);
                                     perror("send - msg_err login");
                                     client[i] = -1;
+                                    root = delete_node(root,sock_cl);
                                     FD_CLR(sock_cl,&masterfds);
                                     close(sock_cl);
-                                    // return 0;
+                                    continue;
                                 }
                                              
                             break;
@@ -291,9 +293,10 @@ int main(int argc, char **argv){
                                 printf("ERROR! In socket %d\n",sock_cl);
                                 perror("send - err");
                                 client[i] = -1;
+                                root = delete_node(root,sock_cl);
                                 FD_CLR(sock_cl,&masterfds);
                                 close(sock_cl);
-                                return 0;
+                                continue;
                             }
                             
                             //obj->signals = SIGNAL_NONE;
@@ -313,9 +316,10 @@ int main(int argc, char **argv){
                                            printf("ERROR! In socket %d\n",sock_cl);
                                             perror("send - err");
                                             client[i] = -1;
+                                            root = delete_node(root,sock_cl);
                                             FD_CLR(sock_cl,&masterfds);
-                                            close(cur_chat_group->element.sockfd);
-                                            return 0; 
+                                            close(sock_cl);
+                                            break; 
                                         }
                                         break;
                                     }
@@ -341,9 +345,10 @@ int main(int argc, char **argv){
                                         printf("ERROR! In socket %d\n",sock_cl);
                                         perror("recv - message");
                                         client[i] = -1;
+                                        root = delete_node(root,sock_cl);
                                         FD_CLR(sock_cl,&masterfds);
                                         close(sock_cl);
-                                        return 0;
+                                        break;
                                     }
                                     break;
                                 }
@@ -366,9 +371,10 @@ int main(int argc, char **argv){
                                 printf("ERROR! In socket %d\n",sock_cl);
                                 perror("recv - message");
                                 client[i] = -1;
+                                root = delete_node(root,sock_cl);
                                 FD_CLR(sock_cl,&masterfds);
                                 close(sock_cl);
-                                return 0;
+                                continue;
                             }
                             break;
                         }
@@ -384,9 +390,10 @@ int main(int argc, char **argv){
                                 printf("ERROR! In socket %d\n",sock_cl);
                                 perror("send recv list friend");
                                 client[i] = -1;
+                                root = delete_node(root,sock_cl);
                                 FD_CLR(sock_cl,&masterfds);
                                 close(sock_cl);
-                                return 0;
+                                continue;
                             }
                             break;
                         }
@@ -404,9 +411,10 @@ int main(int argc, char **argv){
                                 printf("ERROR! In socket %d\n",sock_cl);
                                 perror("send recv list friend");
                                 client[i] = -1;
+                                root = delete_node(root,sock_cl);
                                 FD_CLR(sock_cl,&masterfds);
                                 close(sock_cl);
-                                return 0;
+                                continue;
                             }
                             break;
                         }
@@ -440,8 +448,13 @@ int main(int argc, char **argv){
                                 } else obj->add_friend.err = ERR_NOT_USERNAME;
                                 
                                if (send(sock_cl, obj, sizeof(Object), 0) < 0 ){
+                                   printf("ERROR! In socket %d\n",sock_cl);
                                    perror("send addfriend");
-                                   return 0;
+                                   client[i] = -1;
+                                    root = delete_node(root,sock_cl);
+                                    FD_CLR(sock_cl,&masterfds);
+                                    close(sock_cl);
+                                    continue;
                                }
 
                                 break;
@@ -464,9 +477,10 @@ int main(int argc, char **argv){
                                 printf("ERROR! In socket 123 %d\n",sock_cl);
                                         perror("recv - list group");
                                         client[i] = -1;
+                                        root = delete_node(root,sock_cl);
                                         FD_CLR(sock_cl,&masterfds);
                                         close(sock_cl);
-                                        return 0;
+                                        continue;
                             }
                             break;
                         }
@@ -502,7 +516,13 @@ int main(int argc, char **argv){
                             }
                             obj->signal = SIGNAL_RECV_ADD_MEMBER;
                             if(send(sock_cl,obj,sizeof(Object),0) < 0){
-                                return 0;
+                                printf("ERROR! In socket  %d\n",sock_cl);
+                                        perror("recv - recv add member");
+                                        client[i] = -1;
+                                        root = delete_node(root,sock_cl);
+                                        FD_CLR(sock_cl,&masterfds);
+                                        close(sock_cl);
+                                        continue;
                             }
                             printf("error %d \n", obj->add_member.err);
                             break;
@@ -530,6 +550,16 @@ int main(int argc, char **argv){
                             loginStatus(obj->login.username, 0);
                           
                         }
+                        // case SIGNAL_CATCH_CTRL_C:
+                        // {
+                        //     printf("----------- SIGNAL_LOGUOT\n");
+                        //     root = delete_node(root,sock_cl);
+                        //     loginStatus(obj->login.username, 0);
+                        //     client[i] = -1;
+                                        
+                        //                 FD_CLR(sock_cl,&masterfds);
+                        //                 close(sock_cl);
+                        // }
                         break;
 
                         case SIGNAL_NONE:

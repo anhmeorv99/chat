@@ -21,7 +21,7 @@ typedef struct {
 Object *obj_chat_private;
 int recv_chat;
 int sock_chat_private;
-
+int row_list_friend_private;
 GtkWidget       *window_chat;
 // GtkWidget       *window_friend_chat;
 gboolean check_chat_private = FALSE;
@@ -75,12 +75,34 @@ void on_btn_list_friend_private(GtkButton *button,app_widgets *widg){
         perror("send - chat private");
         exit(0);
     }
-
-
-         if (recv(sock_chat_private,db_recv_chat_private,sizeof(Data_base),0)<0){
+    long recv_byte_ok, dem_ok = 0;
+        recv_byte_ok = recv(sock_chat_private,db_recv_chat_private,sizeof(Data_base),0);
+         if (recv_byte_ok < 0){
             perror("recv chat private");
             exit(0);
+        }
+    while (recv_byte_ok != sizeof(Data_base)){
+        printf("recv_byte = %ld\tsizeof = %ld",recv_byte_ok, sizeof(Data_base));
+        if(send(sock_chat_private, obj_chat_private,sizeof(Object), 0) < 0){
+            perror("send - chat private");
+            exit(0);
+        }
+        recv_byte_ok = recv(sock_chat_private,db_recv_chat_private,sizeof(Data_base),MSG_TRUNC);
+        if (recv_byte_ok < 0){
+            perror("recv chat private");
+            exit(0);
+        }
+        if(recv_byte_ok == sizeof(Data_base)){
+            printf("dem: %ld\tnhan du data (^-^)!!\n",dem_ok);
+        }
+        dem_ok++;
+        if(dem_ok == 30){
+            printf("ERROR: Du lieu nhan ve khong du! dem = %ld\n",dem_ok);
+            break;
+        }
     }
+    
+   
       printf("leng = %ld \n", db_recv_chat_private->chat_private.length_message);
 
    
@@ -116,7 +138,6 @@ void on_btn_list_friend_private(GtkButton *button,app_widgets *widg){
          mark = gtk_text_buffer_create_mark(widg->text_buffer_view,NULL,&end,FALSE);
          gtk_text_view_scroll_to_mark(widg->txtvw_show, mark,0,FALSE,0,0);
     }
-  
 }
 
 
@@ -206,17 +227,17 @@ int chat_private(int argc, char **argv,int sockfd)
 
         if(db_list_friend_private->signal == SIGNAL_DB_LIST_FRIEND_PRIVATE){
             int i;
-            int row = 0;
+            row_list_friend_private = 0;
             char id[5];
             for(i = 0; i < db_list_friend_private->list_friend.length_list_friend; i++){
                 if(db_list_friend_private->list_friend.list_friend[i].confirm == 1){
-                    widgets->button[row] = gtk_button_new_with_label(db_list_friend_private->list_friend.list_friend[i].name);
+                    widgets->button[row_list_friend_private] = gtk_button_new_with_label(db_list_friend_private->list_friend.list_friend[i].name);
                     sprintf(id,"%d", db_list_friend_private->list_friend.list_friend[i].ID);
-                    gtk_widget_set_name(widgets->button[row], id);
-                    g_signal_connect(widgets->button[row],"clicked",G_CALLBACK(on_btn_list_friend_private),widgets);
-                    gtk_grid_insert_row(GTK_GRID(widgets->grid),row);
-                    gtk_grid_attach(GTK_GRID(widgets->grid),widgets->button[row],1,row,1,1);
-                    row++;
+                    gtk_widget_set_name(widgets->button[row_list_friend_private], id);
+                    g_signal_connect(widgets->button[row_list_friend_private],"clicked",G_CALLBACK(on_btn_list_friend_private),widgets);
+                    gtk_grid_insert_row(GTK_GRID(widgets->grid),row_list_friend_private);
+                    gtk_grid_attach(GTK_GRID(widgets->grid),widgets->button[row_list_friend_private],1,row_list_friend_private,1,1);
+                    row_list_friend_private++;
                 }    
             }
             
