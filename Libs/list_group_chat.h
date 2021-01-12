@@ -115,7 +115,10 @@ void on_list_group_chat_destroy()
 void on_btn_create_group_clicked(){
 	create_group_chat(argc_group_chat,&argv_group_chat);
 }
-
+typedef struct {
+    GtkWidget *entry_name_room;
+    GtkWidget *lbl_err_create_room;
+}create_room;
 
 
 //-----------------------create group chat----------------------------
@@ -125,12 +128,14 @@ int create_group_chat(int argc, char **argv)
     GtkBuilder      *builder_create_group_chat; 
    	
     gtk_init(&argc, &argv);
-
+    create_room *create = g_slice_new(create_room);
     builder_create_group_chat = gtk_builder_new();
     gtk_builder_add_from_file (builder_create_group_chat, "Glade/list_group_chat.glade", NULL);
 
     window_create_group_chat = GTK_WIDGET(gtk_builder_get_object(builder_create_group_chat, "create_group_chat"));
-    gtk_builder_connect_signals(builder_create_group_chat, NULL);
+    create->entry_name_room = GTK_WIDGET(gtk_builder_get_object(builder_create_group_chat,"entry_name_room"));
+    create->lbl_err_create_room = GTK_WIDGET(gtk_builder_get_object(builder_create_group_chat,"lbl_err_create"));
+    gtk_builder_connect_signals(builder_create_group_chat, create);
     //--
     //gtk_window_set_decorated(GTK_WINDOW(window_signup),FALSE);
         
@@ -148,4 +153,34 @@ int create_group_chat(int argc, char **argv)
 void on_create_group_chat_destroy()
 {
     gtk_main_quit();
+}
+
+void on_btn_create_room_clicked(GtkButton *b,create_room *create){
+    const char *format_err = "<span foreground='red'>%s</span>" ;
+    const char *format_inv = "<span foreground='green'>%s</span>" ;
+    char *markup_message;
+    if(strlen(gtk_entry_get_text(GTK_ENTRY(create->entry_name_room))) == 0){
+        char err_msg[] = "Ban chua nhap ten nhom!";
+    
+        gtk_widget_set_visible(create->lbl_err_create_room,TRUE);
+        markup_message = g_markup_printf_escaped(format_err,err_msg);
+        gtk_label_set_markup(GTK_LABEL(create->lbl_err_create_room),markup_message);
+        g_free(markup_message);
+    }else{
+        char err_msg[] = "Tao nhom thanh cong!";
+        strcpy(obj_list_group->create_room.name,gtk_entry_get_text(GTK_ENTRY(create->entry_name_room)));
+        obj_list_group->signal = SIGNAL_CREATE_ROOM;
+        if(send(sockfd_group_chat,obj_list_group,sizeof(Object), 0) < 0){
+            perror("send create room");
+            exit(0);
+        }
+        gtk_widget_set_visible(create->lbl_err_create_room,TRUE);
+        markup_message = g_markup_printf_escaped(format_inv,err_msg);
+        gtk_label_set_markup(GTK_LABEL(create->lbl_err_create_room),markup_message);
+        g_free(markup_message);
+    }
+   
+}
+void on_btn_cancel_create_room_clicked(){
+    gtk_window_close(GTK_WINDOW(window_create_group_chat));
 }

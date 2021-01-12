@@ -83,7 +83,7 @@ typedef struct {
 }message_db;
 
 typedef struct {
-	message_db msg_private[100];
+	message_db msg_private[50]; //
 	size_t length_message;
 }Chat_Private_;
 
@@ -93,7 +93,7 @@ typedef struct {
 	int id_admin;
 	member_db members[12];
 	int length_member;
-	message_db msg_public[50];
+	message_db msg_public[30];
 	int length_msg_public;
 }group_db;
 
@@ -139,7 +139,7 @@ member_db getMember(int id);
 int updateMember(int room,int member);
 void requestData(char*url, char*data, char* method);
 
-void create_room(char* name, int admin_room);
+void create_room_(char* name, int admin_room);
 void add_friend(int user, int friend);
 void delete_confirm_friend(int user, int friend);
 
@@ -163,5 +163,5 @@ size_t write_data(void *ptr, size_t size, size_t nmemb, struct url_data *data);
 char *handle_url(char* url);
 
 void postUser(user_db user);
-void changePassword(char* username, char* password);
+void changePassword(int id, char* newpassword);
 void loginStatus(char* username,int status);

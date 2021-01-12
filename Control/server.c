@@ -234,6 +234,7 @@ int main(int argc, char **argv){
                                             //---------
                                             strcpy(obj->login.name, userdb.name);
                                             obj->login.id = userdb.ID_user;
+                                            printf("id login: %d\n", obj->login.id);
                                             err_login = ERR_NONE;
                                             loginStatus(obj->login.username, 1);
                                            
@@ -254,7 +255,7 @@ int main(int argc, char **argv){
                                     client[i] = -1;
                                     FD_CLR(sock_cl,&masterfds);
                                     close(sock_cl);
-                                    return 0;
+                                    // return 0;
                                 }
                                              
                             break;
@@ -414,7 +415,8 @@ int main(int argc, char **argv){
                             printf("Username: %s\n",obj->change_password.username);
                             printf("New Password: %s\n",obj->change_password.new_password);
                             // List_DB *db_change_pass = root_db;
-                            changePassword(obj->change_password.username, obj->change_password.new_password);
+                            user_db user = getUser(obj->change_password.username, -1);
+                            changePassword(user.ID_user, obj->change_password.new_password);
                            
                             break;
                         }
@@ -468,6 +470,8 @@ int main(int argc, char **argv){
                             }
                             break;
                         }
+                        case SIGNAL_RECV_ADD_MEMBER:
+                            break;
                         case SIGNAL_ADD_ROOM:
                         {
                             int check = check_user(obj->add_member.username);
@@ -475,14 +479,13 @@ int main(int argc, char **argv){
                                 obj->add_member.err = ERR_NOT_USERNAME;
                                 
                             } else {
-                                int check_update = 3;
-                                // user_db user = getUser(obj->add_member.username, -1);
-                                // strcpy(obj->add_member.name, user.name);
-                                // obj->add_member.ID = user.ID_user;
-                                // printf("user id : %d\n", user.ID_user);
-                                // printf("room_id : %d, member_id %d: \n", obj->add_member.ID_Room, obj->add_member.ID );
+                                user_db user = getUser(obj->add_member.username, -1);
+                                strcpy(obj->add_member.name, user.name);
+                                obj->add_member.ID = user.ID_user;
+                                printf("user id : %d\n", user.ID_user);
+                                printf("room_id : %d, member_id %d: \n", obj->add_member.ID_Room, obj->add_member.ID );
                                  obj->add_member.err = ERR_NONE;
-                                // int check_update = updateMember(1, 6);
+                                int check_update = updateMember(obj->add_member.ID_Room, obj->add_member.ID);
                                 printf("checkupdate = %d ", check_update);
                                 if (check_update == 1) obj->add_member.err = ERR_NONE;
                                 else if (check_update == 3){
@@ -493,13 +496,15 @@ int main(int argc, char **argv){
                                     obj->add_member.err = ERR_FULL_MEMBER;
                                 } else{
                                     printf("cant update server \n");
-                                    return 0;
+                                   
                                 }
                                 
                             }
+                            obj->signal = SIGNAL_RECV_ADD_MEMBER;
                             if(send(sock_cl,obj,sizeof(Object),0) < 0){
                                 return 0;
                             }
+                            printf("error %d \n", obj->add_member.err);
                             break;
                         }
                         case SIGNAL_CONFIRM_FRIEND:
@@ -510,6 +515,12 @@ int main(int argc, char **argv){
                         case SIGNAL_NO_CONFIRM_FRIEND:
                         {
                             delete_confirm_friend(obj->login.id, obj->add_member.ID);
+                            break;
+                        }
+                        case SIGNAL_CREATE_ROOM:
+                        {
+                            create_room_(obj->create_room.name, obj->login.id);
+
                             break;
                         }
                         case SIGNAL_LOGUOT:

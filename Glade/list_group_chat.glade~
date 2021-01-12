@@ -20,7 +20,18 @@
         <property name="orientation">vertical</property>
         <property name="spacing">5</property>
         <child>
-          <placeholder/>
+          <object class="GtkLabel">
+            <property name="height_request">40</property>
+            <property name="can_focus">False</property>
+            <property name="halign">start</property>
+            <property name="margin_left">100</property>
+            <property name="label" translatable="yes">label</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
         </child>
         <child>
           <object class="GtkBox">
@@ -44,7 +55,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkEntry">
+              <object class="GtkEntry" id="entry_name_room">
                 <property name="width_request">250</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
@@ -75,13 +86,14 @@
               <placeholder/>
             </child>
             <child>
-              <object class="GtkButton">
+              <object class="GtkButton" id="btn_create_room">
                 <property name="label" translatable="yes">Tạo</property>
                 <property name="width_request">100</property>
                 <property name="height_request">40</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
+                <signal name="clicked" handler="on_btn_create_room_clicked" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -90,12 +102,13 @@
               </packing>
             </child>
             <child>
-              <object class="GtkButton">
+              <object class="GtkButton" id="btn_cancel_create_room">
                 <property name="label" translatable="yes">Hủy</property>
                 <property name="width_request">100</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
+                <signal name="clicked" handler="on_btn_cancel_create_room_clicked" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>

@@ -36,20 +36,64 @@ void dup_login_list_group(Object *obj){
 
 void recv_chat_group(void *app){
     const char *format_recv = "<span foreground='blue'><u>%s [%s]:</u></span>" ;
-    char *markup_message;
+    const char *format_invalid = "<span foreground='blue'>%s</span>" ;
+    const char *format_error = "<span foreground='red'>%s</span>" ;
+    
     w_chat_group *widg = (w_chat_group*)app;
     Object *obj = (Object*)malloc(sizeof(Object));
     int recv_chat;
 
     while(1){
+        char *markup_message;
             GtkTextIter iter;
             recv_chat = recv(sockfd_chat_group,obj,sizeof(Object),0);
             if(recv_chat < 0 ){
                 perror("recv - chat group");
                 exit(0);
             };
-     
-   
+            printf("signal: %d\n",obj->signal);
+                //add member
+                if(obj->signal == SIGNAL_RECV_ADD_MEMBER){
+                   
+                    printf("err : %d \n", obj->add_member.err);
+                    if(obj->add_member.err == ERR_NONE){ //them member
+                        int i, len;
+                        for(i =0 ;i < db_list_group->list_group.length_group; i++){
+                            if(db_list_group->list_group.group[i].ID_group==id_room){
+                                len = db_list_group->list_group.group[i].length_member;
+                                
+                                char *id_mem = (char*)malloc(5*sizeof(char));
+                                sprintf(id_mem,"%d",obj->add_member.ID); 
+                                widg->btn_member[len] = gtk_button_new_with_label(obj->add_member.name);
+                                gtk_widget_set_name(widg->btn_member[len], id_mem);
+                                // g_signal_connect(list_group->btn_group[i],"clicked",G_CALLBACK(on_btn_group),NULL);
+                                gtk_grid_insert_row(GTK_GRID(widg->grid_member),len);
+                                gtk_grid_attach(GTK_GRID(widg->grid_member),widg->btn_member[len],1,len,1,1);
+                                gtk_widget_show_all(widg->scrol_member);
+                                db_list_group->list_group.group[i].length_member++;
+
+                                break;
+                            }
+                        }
+                    
+
+                        char err_msg[] = "Them thanh vien thanh cong!";
+                        markup_message = g_markup_printf_escaped(format_invalid,err_msg);
+                        gtk_label_set_markup(GTK_LABEL(widg->lbl_err_username),markup_message);
+                        gtk_widget_set_visible(widg->lbl_err_username, TRUE);
+                        g_free(markup_message);
+                                
+                    
+                    }else{
+                        char msg_con[100];
+                        error_to_string(obj->add_member.err,msg_con);
+                        markup_message = g_markup_printf_escaped(format_error,msg_con);
+                        gtk_label_set_markup(GTK_LABEL(widg->lbl_err_username),markup_message);
+                        gtk_widget_set_visible(widg->lbl_err_username, TRUE);
+                        g_free(markup_message);
+                    }
+                }
+                //chat room
                 if (obj->signal == SIGNAL_CHAT_GROUP)
                 {
                     if(obj->chat_group.ID_Room == id_room){
@@ -246,7 +290,7 @@ void on_btn_send_group_clicked(GtkButton *b, w_chat_group *chat_group_ok){
 }
 
 void on_add_member_clicked(GtkButton *b, w_chat_group *chat_group){
-    const char *format_invalid = "<span foreground='blue'>%s</span>" ;
+    
     const char *format_error = "<span foreground='red'>%s</span>" ;
     char *markup_message;
     if(strlen(gtk_entry_get_text(GTK_ENTRY(chat_group->entry_add_member))) == 0){
@@ -257,7 +301,7 @@ void on_add_member_clicked(GtkButton *b, w_chat_group *chat_group){
         g_free(markup_message);
     }else{
         
-        int recv_byte;
+        
         obj_list_group->add_member.ID_Room = id_room;
         strcpy(obj_list_group->add_member.username, gtk_entry_get_text(GTK_ENTRY(chat_group->entry_add_member)));
         obj_list_group->signal = SIGNAL_ADD_ROOM;
@@ -266,48 +310,8 @@ void on_add_member_clicked(GtkButton *b, w_chat_group *chat_group){
             exit(0);
         }
         printf("helllo");
-        Object *obj = (Object*)malloc(sizeof(Object));
-        if((recv_byte = recv(sockfd_chat_group,obj, sizeof(Object), 0)) < 0){
-            perror("recv add room");
-            exit(0);
-        }
+        // Object *obj = (Object*)malloc(sizeof(Object));
         
-        if(obj->add_member.err == ERR_NONE){ //them member
-            int i, len;
-            for(i =0 ;i < db_list_group->list_group.length_group; i++){
-                if(db_list_group->list_group.group[i].ID_group==id_room){
-                    len = db_list_group->list_group.group[i].length_member;
-                    
-                    char id_mem[5];
-                    sprintf(id_mem,"%d",obj->add_member.ID); 
-                    chat_group->btn_member[len] = gtk_button_new_with_label(obj->add_member.name);
-                    gtk_widget_set_name(chat_group->btn_member[len], id_mem);
-                    // g_signal_connect(list_group->btn_group[i],"clicked",G_CALLBACK(on_btn_group),NULL);
-                    gtk_grid_insert_row(GTK_GRID(chat_group->grid_member),len);
-                    gtk_grid_attach(GTK_GRID(chat_group->grid_member),chat_group->btn_member[len],1,len,1,1);
-                    gtk_widget_show_all(chat_group->scrol_member);
-                    db_list_group->list_group.group[i].length_member++;
-
-                    break;
-                }
-            }
-        
-
-            char err_msg[] = "Them thanh vien thanh cong!";
-            markup_message = g_markup_printf_escaped(format_invalid,err_msg);
-            gtk_label_set_markup(GTK_LABEL(chat_group->lbl_err_username),markup_message);
-            gtk_widget_set_visible(chat_group->lbl_err_username, TRUE);
-            g_free(markup_message);
-                    
-          
-        }else{
-            char msg_con[100];
-            error_to_string(obj->add_member.err,msg_con);
-            markup_message = g_markup_printf_escaped(format_error,msg_con);
-            gtk_label_set_markup(GTK_LABEL(chat_group->lbl_err_username),markup_message);
-            gtk_widget_set_visible(chat_group->lbl_err_username, TRUE);
-            g_free(markup_message);
-        }
     }
     
 }

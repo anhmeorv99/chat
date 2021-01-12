@@ -163,7 +163,7 @@ void requestData(char*url, char*data, char* method){
 	
 }
 
-void create_room(char* name, int admin_room){
+void create_room_(char* name, int admin_room){
 	char* data = (char*)malloc(100*sizeof(char));
 	sprintf(data, "{\"name\": \"%s\", \"member\": [%d], \"admin_room\" : %d}", name, admin_room, admin_room);
 	char url[] = "http://127.0.0.1:8000/api/room/";
@@ -578,18 +578,12 @@ int check_user(char* username){
 
 
 int updateMember(int room, int member){
-	CURL *curl;
-	CURLcode res;
-	curl = curl_easy_init();
-	curl_global_init(CURL_GLOBAL_ALL);
 
 	Room item;
 	char* url = (char*)malloc(100*sizeof(char));
 	char* buffer = (char*)malloc(100*sizeof(char));
 	char *data = (char*)malloc(100*sizeof(char));
 
-	char *id = (char*)malloc(50*sizeof(char));
-	char *list_member = (char*)malloc(500*sizeof(char));
 	int j, length_member;
 	sprintf(url, "http://127.0.0.1:8000/api/room/%d/", room);
 	buffer = handle_url(url);
@@ -610,34 +604,14 @@ int updateMember(int room, int member){
 			if (length_member >= 10) return 2; // nhom day
 			for(j=0;j<length_member;j++) {
 				id_member = json_object_array_get_idx(item.member, j);
+				printf("id member : %d", json_object_get_int(id_member));
+
 						if (json_object_get_int(id_member) == member) return 3; // id ton tai
 			}	
-			
-			for(j=0;j<length_member;j++){
-				id_member = json_object_array_get_idx(item.member, j);
-				sprintf(id, "%d, ", json_object_get_int(id_member));
-				strcat(list_member,id);
-			}
-			sprintf(data,"{\"member\":[%s%d]}",list_member, member);
-			// printf("%s", data);
-		if(curl){
 		
-			struct curl_slist *chunk = NULL; 
-			chunk = curl_slist_append(chunk, "Content-Type: application/json");
-			curl_easy_setopt(curl, CURLOPT_HTTPHEADER, chunk);
-			curl_easy_setopt(curl, CURLOPT_URL, url);
-			curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "PATCH");
-			curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data);
-			res = curl_easy_perform(curl);
-			if(res != CURLE_OK){
-				fprintf(stderr, "curl_easy_perform() failed: %s\n",
-					curl_easy_strerror(res));
-				return -1;
-			}
-			
-			curl_easy_cleanup(curl);
-			return 1;
-		}
+		sprintf(data, "http://127.0.0.1:8000/api/room/%d/?add_member=%d&room=%d", room, member, room);
+		requestData(data, NULL, "PATCH");
+		return 1;
 	}
 	return -1;
 }
@@ -728,79 +702,31 @@ void postUser(user_db user){
 }
 
 
-void changePassword(char* username, char* newpassword){
-	user_db user = getUser(username,-1);
-	CURL *curl;
-	CURLcode res;
-	long http_code;
-	char url[]= "http://127.0.0.1:8000/api/user/";
-	sprintf(url,"%s%d/", url,user.ID_user);
-	char data[100];
-	sprintf(data,"/?password=%s",newpassword);
-	curl = curl_easy_init();
-	curl_global_init(CURL_GLOBAL_ALL);
-
-	if(curl){
-		
-		curl_easy_setopt(curl, CURLOPT_URL, url);
-		curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "PATCH");
-		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data);
-
-
-		//enable to spit out information for debugging
-		//curl_easy_setopt(curl, CURLOPT_VERBOSE,1L); 
-
-		res = curl_easy_perform(curl);
-
-		if (res != CURLE_OK){
-			fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res) );
-		}
-
-		printf("\nget http return code\n");
-		curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
-		printf("http code: %lu\n", http_code );
-
-
-		curl_easy_cleanup(curl);
-		curl_global_cleanup();
-
-		}
+void changePassword(int id, char* newpassword){
+	
+	char *url= (char*)malloc(100*sizeof(char));
+	char *data = (char*)malloc(100*sizeof(char));
+	sprintf(url,"http://127.0.0.1:8000/api/user/%d/",id);
+	sprintf(data,"{\"password\": \"%s\"}", newpassword);
+	requestData(url,data, "PATCH");
+	
 }
 
 void loginStatus(char* username,int status){
 	user_db user = getUser(username,-1);
-	CURL *curl;
-	CURLcode res;
-	long http_code;
 	char *url= (char*)malloc(100*sizeof(char));
-	sprintf(url,"http://127.0.0.1:8000/api/user/%d/?status=%d", user.ID_user, status);
-	curl = curl_easy_init();
-	curl_global_init(CURL_GLOBAL_ALL);
+	sprintf(url,"http://127.0.0.1:8000/api/user/%d/", user.ID_user);
+	char *data = (char*)malloc(100*sizeof(char));
+	if (status == 1){
+		sprintf(data,"{\"status\": true}");
+	}else
+	{
+		sprintf(data,"{\"status\": false}");
+	}
+	
+	requestData(url,data,"PATCH");
 
-	if(curl){
-		
-		curl_easy_setopt(curl, CURLOPT_URL, url);
-		curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "PATCH");
-
-		//enable to spit out information for debugging
-		//curl_easy_setopt(curl, CURLOPT_VERBOSE,1L); 
-
-		res = curl_easy_perform(curl);
-
-		if (res != CURLE_OK){
-			fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res) );
-		}
-
-		printf("\nget http return code\n");
-		curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
-		printf("http code: %lu\n", http_code );
-
-
-		curl_easy_cleanup(curl);
-		curl_global_cleanup();
-
-		}
-	free(url);
+	
 }
 // int main(int argc, char **argv) {
 // 	// Data_base *db = (Data_base*)malloc(sizeof(Data_base));
@@ -810,7 +736,8 @@ void loginStatus(char* username,int status){
 // 	// for (i=0; i< db->list_friend.length_list_friend; i++){
 // 	// 	printf("id friend: %d \n", db->list_friend.list_friend[i].ID);
 // 	// }
-// 	delete_confirm_friend(2,7);
+// 	int check = updateMember(8,7);
+// 	printf("check = %d", check);
 // 	// int check = check_friend(1,111);
 // 	// printf("check = %d", check);
 // 	return 1;
