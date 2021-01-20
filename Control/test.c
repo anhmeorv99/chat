@@ -3,6 +3,6 @@
 #include <stdio.h>
 
 int main(){
-    int check = updateMember(8,7);
+    printf("size : %ld ", sizeof(Data_base));
     return 1;
 }

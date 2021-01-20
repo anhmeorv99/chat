@@ -271,6 +271,7 @@ void delete_confirm_friend(int user, int friend){
 
 } 
 
+
 member_db getMember(int id){
 	member_db Eltype;
 	user_db profile = getUser(NULL,id);
@@ -331,9 +332,9 @@ message_db getOneMessagePrivate(MessagePrivate message,user_db from_profile, use
 	return Eltype;
 }
 
-Data_base *getMessagePrivate(int from_user, int to_user)
+Data_base_chat_private *getMessagePrivate(int from_user, int to_user)
 {
-	Data_base *database = (Data_base*)malloc(sizeof(Data_base));
+	Data_base_chat_private *database = (Data_base_chat_private*)malloc(sizeof(Data_base_chat_private));
 	MessagePrivate item;
 	size_t length_eltype;
 	size_t i;	
@@ -347,7 +348,7 @@ Data_base *getMessagePrivate(int from_user, int to_user)
 	char* url = (char*)malloc(100*sizeof(char));
 	sprintf(url, "http://127.0.0.1:8000/api/private/?from_user=%d&to_user=%d", from_user, to_user);
 	// get data
-	char* element = (char*)malloc(100*sizeof(char));
+	char* element = (char*)malloc(500*sizeof(char));
 	element = handle_url(url);
 	
 	parsed_json = json_tokener_parse(element);
@@ -368,7 +369,7 @@ Data_base *getMessagePrivate(int from_user, int to_user)
 			
 			database->chat_private.msg_private[i] = msg_db;
 	}
-	
+	free(element);
 	return database;
 }
 

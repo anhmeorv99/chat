@@ -61,47 +61,47 @@ typedef enum{
 typedef struct {
 	int ID; //khoa chinh
 	int confirm;
-	char username[20]; //username cua friend
-	char name[15];
+	char username[30]; //username cua friend
+	char name[30];
 }friend_db;
 
 typedef struct {
 	int ID; 
-	char username[20];
-	char name[20];
+	char username[30];
+	char name[30];
 }member_db;
 
 typedef struct {
 	int from_id;
 	int to_id;
-	char from_username[20];
-	char to_username[20];
-	char to_name[20];
-	char from_name[20];
+	char from_username[30];
+	char to_username[30];
+	char to_name[30];
+	char from_name[30];
 	char message[100];
 	char create_at[20];
 }message_db;
 
 typedef struct {
-	message_db msg_private[50]; //
-	size_t length_message;
+	message_db msg_private[100]; //
+	int length_message;
 }Chat_Private_;
 
 typedef struct {
 	int ID_group;
-	char name[20];
+	char name[30];
 	int id_admin;
-	member_db members[12];
+	member_db members[11];
 	int length_member;
-	message_db msg_public[30];
+	message_db msg_public[100];
 	int length_msg_public;
 }group_db;
 
 typedef struct {
 	int ID_user;
-	char name[20];
-	char username[20];
-	char password[20];
+	char name[30];
+	char username[30];
+	char password[30];
 	int is_admin;
 	int login_status;
 }user_db;
@@ -112,24 +112,28 @@ typedef struct {
 } List_Friend_;
 
 typedef struct {
-	group_db group[5];
+	group_db group[10];
 	int length_group;
 } List_Group_;
 
 
 typedef struct {
 	Signal_db signal;
-	user_db user;
 	List_Friend_ list_friend;
 	List_Group_ list_group;
-	Chat_Private_ chat_private;
 }Data_base;
+
+typedef struct {
+	Signal_db signal;
+	List_Friend_ list_friend;
+	Chat_Private_ chat_private;
+}Data_base_chat_private;
 
 Data_base *getListFriend(int id);
 
 Data_base * getGroup(char* element);
 
-Data_base *getMessagePrivate(int from_user, int to_user);
+Data_base_chat_private *getMessagePrivate(int from_user, int to_user);
 Data_base *getMessageGroup(int room);
 
 friend_db getFriend(Friend friend, int mode);
@@ -142,7 +146,6 @@ void requestData(char*url, char*data, char* method);
 void create_room_(char* name, int admin_room);
 void add_friend(int user, int friend);
 void delete_confirm_friend(int user, int friend);
-
 
 message_db getOneMessageGroup(Message message,user_db from_profile);
 message_db getOneMessagePrivate(MessagePrivate message,user_db from_profile, user_db to_profile);

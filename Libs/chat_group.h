@@ -61,15 +61,19 @@ void recv_chat_group(void *app){
                         for(i =0 ;i < db_list_group->list_group.length_group; i++){
                             if(db_list_group->list_group.group[i].ID_group==id_room){
                                 len = db_list_group->list_group.group[i].length_member;
-                                
+                                printf("log 1\n");
                                 char *id_mem = (char*)malloc(5*sizeof(char));
                                 sprintf(id_mem,"%d",obj->add_member.ID); 
                                 widg->btn_member[len] = gtk_button_new_with_label(obj->add_member.name);
                                 gtk_widget_set_name(widg->btn_member[len], id_mem);
+                                printf("log 2\n");
                                 // g_signal_connect(list_group->btn_group[i],"clicked",G_CALLBACK(on_btn_group),NULL);
                                 gtk_grid_insert_row(GTK_GRID(widg->grid_member),len);
+                                printf("log 3\n");
                                 gtk_grid_attach(GTK_GRID(widg->grid_member),widg->btn_member[len],1,len,1,1);
+                                 printf("log 4\n");
                                 gtk_widget_show_all(widg->scrol_member);
+                                 printf("log 5\n");
                                 db_list_group->list_group.group[i].length_member++;
 
                                 break;

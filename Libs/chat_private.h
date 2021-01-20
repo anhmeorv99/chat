@@ -69,47 +69,47 @@ void on_btn_list_friend_private(GtkButton *button,app_widgets *widg){
     obj_chat_private->chat_private.to_id = atoi(gtk_widget_get_name(GTK_WIDGET(button)));
     obj_chat_private->signal = SIGNAL_RECV_CHAT_PRIVATE;
 
-    Data_base *db_recv_chat_private = (Data_base*)malloc(sizeof(Data_base));
+    Data_base_chat_private *db_recv_chat_private = (Data_base_chat_private*)malloc(sizeof(Data_base_chat_private));
 
     if(send(sock_chat_private, obj_chat_private,sizeof(Object), 0) < 0){
         perror("send - chat private");
         exit(0);
     }
-    long recv_byte_ok, dem_ok = 0;
-        recv_byte_ok = recv(sock_chat_private,db_recv_chat_private,sizeof(Data_base),0);
+    int recv_byte_ok;
+        recv_byte_ok = recv(sock_chat_private,db_recv_chat_private,sizeof(Data_base_chat_private),0);
          if (recv_byte_ok < 0){
             perror("recv chat private");
             exit(0);
         }
-    while (recv_byte_ok != sizeof(Data_base)){
-        printf("recv_byte = %ld\tsizeof = %ld",recv_byte_ok, sizeof(Data_base));
-        if(send(sock_chat_private, obj_chat_private,sizeof(Object), 0) < 0){
-            perror("send - chat private");
-            exit(0);
-        }
-        recv_byte_ok = recv(sock_chat_private,db_recv_chat_private,sizeof(Data_base),MSG_TRUNC);
-        if (recv_byte_ok < 0){
-            perror("recv chat private");
-            exit(0);
-        }
-        if(recv_byte_ok == sizeof(Data_base)){
-            printf("dem: %ld\tnhan du data (^-^)!!\n",dem_ok);
-        }
-        dem_ok++;
-        if(dem_ok == 30){
-            printf("ERROR: Du lieu nhan ve khong du! dem = %ld\n",dem_ok);
-            break;
-        }
-    }
+    // while (recv_byte_ok != sizeof(Data_base_chat_private)){
+    //     printf("recv_byte = %ld\tsizeof = %ld \n",recv_byte_ok, sizeof(Data_base_chat_private));
+    //     if(send(sock_chat_private, obj_chat_private,sizeof(Object), 0) < 0){
+    //         perror("send - chat private");
+    //         exit(0);
+    //     }
+    //     recv_byte_ok = recv(sock_chat_private,db_recv_chat_private,sizeof(Data_base_chat_private),MSG_TRUNC);
+    //     if (recv_byte_ok < 0){
+    //         perror("recv chat private");
+    //         exit(0);
+    //     }
+    //     if(recv_byte_ok == sizeof(Data_base_chat_private)){
+    //         printf("dem: %ld\tnhan du data : %ld (^-^)!!\n",dem_ok, recv_byte_ok);
+    //          printf("leng = %d \n", db_recv_chat_private->chat_private.length_message);
+    //         break;
+    //     }
+    //     dem_ok++;
+    //     if(dem_ok == 30){
+    //         printf("ERROR: Du lieu nhan ve khong du! dem = %ld\n",dem_ok);
+    //         break;
+    //     }
+    // }
     
    
-      printf("leng = %ld \n", db_recv_chat_private->chat_private.length_message);
+      printf("leng = %d \n", db_recv_chat_private->chat_private.length_message);
 
    
-    
-  
-
-    int i;
+    // if(recv_byte_ok == sizeof(Data_base_chat_private)){
+         int i;
     if(db_recv_chat_private->signal == SIGNAL_DB_CHAT_PRIVATE){
         gtk_text_buffer_set_text(widg->text_buffer_view, "", -1);
         for (i=0;i < db_recv_chat_private->chat_private.length_message; i++){
@@ -138,6 +138,10 @@ void on_btn_list_friend_private(GtkButton *button,app_widgets *widg){
          mark = gtk_text_buffer_create_mark(widg->text_buffer_view,NULL,&end,FALSE);
          gtk_text_view_scroll_to_mark(widg->txtvw_show, mark,0,FALSE,0,0);
     }
+    // }
+  
+
+   
 }
 
 
@@ -216,11 +220,11 @@ int chat_private(int argc, char **argv,int sockfd)
         perror("send - list friend");
         exit(0);
     }
-    Data_base *db_list_friend_private = (Data_base*)malloc(sizeof(Data_base));
+    Data_base_chat_private *db_list_friend_private = (Data_base_chat_private*)malloc(sizeof(Data_base_chat_private));
 
    
         
-        if(recv(sock_chat_private,db_list_friend_private,sizeof(Data_base), MSG_WAITALL) < 0){
+        if(recv(sock_chat_private,db_list_friend_private,sizeof(Data_base_chat_private), MSG_WAITALL) < 0){
             perror("recv - list friend");
             exit(0);
         }

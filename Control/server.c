@@ -359,7 +359,7 @@ int main(int argc, char **argv){
                         case SIGNAL_RECV_CHAT_PRIVATE:
                         {
                             printf("-----------recv chat private\n");
-                            Data_base *db_chat_private = (Data_base*)malloc(sizeof(Data_base));
+                            Data_base_chat_private *db_chat_private = (Data_base_chat_private*)malloc(sizeof(Data_base_chat_private));
                             // user_db  profile_recv;
                             // profile = getUser(obj->chat_private.from_username, -1);
                             // sleep(0.3); 
