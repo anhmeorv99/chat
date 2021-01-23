@@ -349,12 +349,14 @@ Data_base_chat_private *getMessagePrivate(int from_user, int to_user)
 	sprintf(url, "http://127.0.0.1:8000/api/private/?from_user=%d&to_user=%d", from_user, to_user);
 	// get data
 	char* element = (char*)malloc(500*sizeof(char));
+	char* len_str = (char*)malloc(4*sizeof(char));
 	element = handle_url(url);
 	
 	parsed_json = json_tokener_parse(element);
 
 	length_eltype = json_object_array_length(parsed_json);
-	database->chat_private.length_message =length_eltype;
+	database->chat_private.length_message = length_eltype;
+	sprintf(len_str,"%ld", length_eltype);
 		for(i=0;i<length_eltype;i++) {
 			elementType = json_object_array_get_idx(parsed_json, i);
 			json_object_object_get_ex(elementType, "from_user", &item.from_user);
@@ -363,8 +365,10 @@ Data_base_chat_private *getMessagePrivate(int from_user, int to_user)
 			json_object_object_get_ex(elementType, "to_user", &item.to_user);
 			if (profile.ID_user == json_object_get_int(item.from_user)){
 					msg_db = getOneMessagePrivate(item, profile, profile_recv);
+					strcpy(msg_db.len, len_str);
 			} else{
 				msg_db = getOneMessagePrivate(item, profile_recv ,profile);
+				strcpy(msg_db.len, len_str);
 			}
 			
 			database->chat_private.msg_private[i] = msg_db;

@@ -80,6 +80,7 @@ typedef struct {
 	char from_name[30];
 	char message[100];
 	char create_at[20];
+	char len[4];
 }message_db;
 
 typedef struct {

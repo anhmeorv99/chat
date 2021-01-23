@@ -105,7 +105,7 @@ void on_btn_list_friend_private(GtkButton *button,app_widgets *widg){
     // }
     
    
-      printf("leng = %d \n", db_recv_chat_private->chat_private.length_message);
+      printf("leng int = %d , leng char = %s\n", db_recv_chat_private->chat_private.length_message, db_recv_chat_private->chat_private.msg_private[0].len);
 
    
     // if(recv_byte_ok == sizeof(Data_base_chat_private)){
