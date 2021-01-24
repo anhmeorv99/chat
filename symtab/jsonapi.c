@@ -123,6 +123,7 @@ friend_db getFriend(Friend friend, int mode){
 		user_db profile = getUser(NULL, json_object_get_int(friend._friend)); 
 		Eltype.ID = json_object_get_int(friend._friend); //id friend
 		Eltype.confirm = json_object_get_boolean(friend.confirm); //confirm
+		Eltype.loginStatus = profile.login_status;
 		strcpy(Eltype.name,profile.name);
 		strcpy(Eltype.username, profile.username);
 		return Eltype;
@@ -131,6 +132,7 @@ friend_db getFriend(Friend friend, int mode){
 	user_db profile = getUser(NULL, json_object_get_int(friend.user)); 
 		Eltype.ID = json_object_get_int(friend.user); //id friend
 		Eltype.confirm = json_object_get_boolean(friend.confirm); //confirm
+		Eltype.loginStatus = profile.login_status;
 		strcpy(Eltype.name,profile.name);
 		strcpy(Eltype.username, profile.username);
 		return Eltype;

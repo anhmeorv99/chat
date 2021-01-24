@@ -1,14 +1,7 @@
 #include <gtk/gtk.h>
 #include "../symtab/jsonapi.h"
-typedef struct {
-    GtkWidget *entry_add_friend;
-    GtkWidget *lbl_err_add_friend;
-    GtkWidget *grid_list_friend;
-    GtkWidget *scrol_list_friend;
-    GtkWidget *lbl_null_list_friend;
-    GtkWidget *btn_list_friend[100];
-    //GtkWidget *btn_add_friend;
-}w_list_friend;
+#include "info_friend.h"
+
 typedef struct {
     GtkWidget *scrol_thong_bao;
     GtkWidget *grid_thong_bao;
@@ -17,16 +10,16 @@ typedef struct {
 }w_thong_bao;
 GtkWidget *window_menu_friend;
 GtkWidget *window_thong_bao;
-GtkWidget *window_list_friend;
+
 GtkWidget *window_confirm_friend;
 int sockfd_friend;
 int argc_friend;
 char *argv_friend;
 int id_confirm_friend;
 int row_thong_bao;
-int row_list_friend;
-Data_base *db_list_friend;
-Object *obj_login_list_friend;
+
+
+
 gboolean check_menu_list_friend = FALSE;
 
 gboolean getCheckMenuFriend(){
@@ -39,9 +32,7 @@ void setCheckMenuFriend(){
     else
         check_menu_list_friend = FALSE;
 }
-void dup_obj_list_friend(Object *obj){
-    obj_login_list_friend = duplicate_object(obj);
-}
+
 
 int thong_bao(int argc, char **argv);
 int list_friend(int argc, char **argv);
@@ -253,8 +244,11 @@ int list_friend(int argc, char **argv)
 }
 
 void on_btn_list_friend(GtkButton *button,w_list_friend *list_friend){
-    g_print("name = %s , username = %s\n",gtk_button_get_label(button),
+    g_print("id: %d\tname = %s , username = %s\n",atoi(gtk_widget_get_name(GTK_WIDGET(button))),
+    gtk_button_get_label(button),
                  gtk_widget_get_name(GTK_WIDGET(button)));
+    gtk_widget_set_sensitive (window_list_friend, FALSE);
+    info_friend(argc_friend,&argv_friend,sockfd_friend,atoi(gtk_widget_get_name(GTK_WIDGET(button))),list_friend);
 }
 
 // called when window is closed
@@ -342,19 +336,7 @@ void on_confirm_friend_destroy()
     gtk_widget_set_sensitive(window_thong_bao,TRUE);
     gtk_main_quit();
 }
-void delete_btn_friend(int id){
-    int i;
-    for (i = 0; i < db_list_friend->list_friend.length_list_friend; i++){
-        if(db_list_friend->list_friend.list_friend[i].ID == id){
-            int j;
-            for(j = i + 1; j < db_list_friend->list_friend.length_list_friend; j++){
-                db_list_friend->list_friend.list_friend[j-1] = db_list_friend->list_friend.list_friend[j];
-            }
-            db_list_friend->list_friend.length_list_friend--;
-            break;
-        }
-    }
-}
+
 void on_btn_chap_nhan_clicked(GtkButton *b, w_thong_bao *thongbao){
     int i;
     for(i = 0; i < db_list_friend->list_friend.length_list_friend; i++){

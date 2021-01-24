@@ -61,6 +61,7 @@ typedef enum{
 typedef struct {
 	int ID; //khoa chinh
 	int confirm;
+	int loginStatus;
 	char username[30]; //username cua friend
 	char name[30];
 }friend_db;
