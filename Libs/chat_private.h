@@ -112,7 +112,7 @@ void on_btn_list_friend_private(GtkButton *button,app_widgets *widg){
          int i;
     if(db_recv_chat_private->signal == SIGNAL_DB_CHAT_PRIVATE){
         gtk_text_buffer_set_text(widg->text_buffer_view, "", -1);
-        for (i=0;i < db_recv_chat_private->chat_private.length_message; i++){
+        for (i=0;i < atoi(db_recv_chat_private->chat_private.msg_private[0].len); i++){
             GtkTextIter iter;
             if(gtk_text_buffer_get_char_count(gtk_text_view_get_buffer(widg->txtvw_show)) != 0){
                         gtk_text_buffer_insert_at_cursor(widg->text_buffer_view,"\n",-1);
