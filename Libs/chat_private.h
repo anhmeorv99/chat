@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <ctype.h>
 #include "menu_list_friend.h"
 typedef struct {
 	GtkTextBuffer *text_buffer_view;
@@ -40,6 +41,23 @@ void dup_obj_chat_private(Object *obj){
     obj_chat_private = duplicate_object(obj);
 }
 
+int isNumber(char*numbers)
+{
+    int i, correctNum = 1;
+    if (strlen(numbers) == 0) return 0;
+    for(i = 0 ; i < strlen(numbers) ; ++i)
+    {
+        if(!isdigit(numbers[i]))
+        {
+            correctNum = 0;
+            break;
+        }
+    }
+
+    if(correctNum == 0) return 0;
+    return 1;
+}
+
 
 char * convert_timestamp_to_date(char* timestamp){
     time_t rawtime = (time_t)atoi(timestamp);
@@ -68,19 +86,23 @@ void on_btn_list_friend_private(GtkButton *button,app_widgets *widg){
     obj_chat_private->chat_private.from_id = obj_chat_private->login.id;
     obj_chat_private->chat_private.to_id = atoi(gtk_widget_get_name(GTK_WIDGET(button)));
     obj_chat_private->signal = SIGNAL_RECV_CHAT_PRIVATE;
-
     Data_base_chat_private *db_recv_chat_private = (Data_base_chat_private*)malloc(sizeof(Data_base_chat_private));
-
     if(send(sock_chat_private, obj_chat_private,sizeof(Object), 0) < 0){
-        perror("send - chat private");
-        exit(0);
-    }
-    int recv_byte_ok;
-        recv_byte_ok = recv(sock_chat_private,db_recv_chat_private,sizeof(Data_base_chat_private),0);
+            perror("send - chat private");
+            exit(0);
+        }
+     int recv_byte_ok, i;
+    recv_byte_ok = recv(sock_chat_private,db_recv_chat_private,sizeof(Data_base_chat_private),0);
          if (recv_byte_ok < 0){
             perror("recv chat private");
             exit(0);
         }
+    
+    
+    
+    printf("len_char = %ld \t size = %ld \t size_byte : %d \n", strlen(db_recv_chat_private->chat_private.msg_private[0].len), sizeof(*db_recv_chat_private), recv_byte_ok);
+   
+
     // while (recv_byte_ok != sizeof(Data_base_chat_private)){
     //     printf("recv_byte = %ld\tsizeof = %ld \n",recv_byte_ok, sizeof(Data_base_chat_private));
     //     if(send(sock_chat_private, obj_chat_private,sizeof(Object), 0) < 0){
@@ -105,11 +127,9 @@ void on_btn_list_friend_private(GtkButton *button,app_widgets *widg){
     // }
     
    
-      printf("leng int = %d , leng char = %s\n", db_recv_chat_private->chat_private.length_message, db_recv_chat_private->chat_private.msg_private[0].len);
-
    
     // if(recv_byte_ok == sizeof(Data_base_chat_private)){
-         int i;
+         
     if(db_recv_chat_private->signal == SIGNAL_DB_CHAT_PRIVATE){
         gtk_text_buffer_set_text(widg->text_buffer_view, "", -1);
         for (i=0;i < atoi(db_recv_chat_private->chat_private.msg_private[0].len); i++){
