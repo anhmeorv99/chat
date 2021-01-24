@@ -759,16 +759,19 @@ void changePassword(int id, char* newpassword){
 	
 }
 
-void updateUser(int id, char* newpassword){
+void updateUser(int id, char* newpassword, char* name){
 	char *url= (char*)malloc(100*sizeof(char));
 	char *data = (char*)malloc(100*sizeof(char));
 	sprintf(url,"http://127.0.0.1:8000/api/user/%d/",id);
 	if (newpassword==NULL){
 		sprintf(data,"{\"status\": \"%s\"}", "false");
-	} else
-	{
+	} else if (name==NULL){
 		sprintf(data,"{\"status\": \"%s\",\"password\": \"%s\"}", "false",newpassword);
+	}else
+	{
+		sprintf(data,"{\"status\": \"%s\",\"password\": \"%s\",\"name\": \"%s\"}", "false",newpassword, name);
 	}
+	
 	
 	requestData(url,data, "PATCH");
 }
@@ -789,6 +792,6 @@ void loginStatus(char* username,int status){
 
 	
 }
-// int main(int argc, char **argv) {
-// 	updateUser(1,"123456");
-// }
+int main(int argc, char **argv) {
+	updateUser(1,"123456","Daiii");
+}
