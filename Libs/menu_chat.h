@@ -3,7 +3,7 @@
 #include "change_password.h"
 
 #include "list_group_chat.h"
-
+#include "admin.h"
 
 GtkWidget       *window_menu;
 GtkWidget       *window_login;
@@ -97,6 +97,10 @@ void on_btn_change_password_clicked(){
         change_password(argc_command,&argv_command);
     }
     
+}
+
+void on_btn_admin_clicked(){
+    admin(argc_command,&argv_command);
 }
 
 void on_btn_logout_clicked(){
