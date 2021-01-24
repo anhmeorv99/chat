@@ -162,7 +162,7 @@ void create_room_(char* name, int admin_room);
 void add_friend(int user, int friend);
 void delete_confirm_friend(int user, int friend);
 void delete_user(int user);
-void updateUser(int id, char* newpassword);
+void updateUser(int id, char* newpassword, char* name);
 
 message_db getOneMessageGroup(Message message,user_db from_profile);
 message_db getOneMessagePrivate(MessagePrivate message,user_db from_profile, user_db to_profile);
