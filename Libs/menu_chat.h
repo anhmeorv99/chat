@@ -49,18 +49,20 @@ int menu_chat(int argc, char **argv, int sockfd)
 // called when window is closed
 void on_menu_chat_destroy()
 {
-//     if (gtk_window_activate_focus(GTK_WINDOW(window_chat))){
-//         gtk_window_close(GTK_WINDOW(window_chat));
-//    }
-//     if (gtk_window_activate_focus(GTK_WINDOW(window_change_pass))){
-
-//         gtk_window_close(GTK_WINDOW(window_change_pass));
-//     }
-//     if (gtk_window_activate_focus(GTK_WINDOW(window_menu_friend))){
-//         gtk_window_close(GTK_WINDOW(window_menu_friend));
-//     }
+    if(getCheckChatPrivate() == TRUE){
+        gtk_window_close(GTK_WINDOW(window_chat));
+    }
+    if(getCheckCreateGroup() == TRUE){
+        gtk_window_close(GTK_WINDOW(window_create_group_chat));
+    }
+    if(getCheckChatGroup() == TRUE){
+        gtk_window_close(GTK_WINDOW(window_chat_group));
+    }
+    if(getCheckListGroup() == TRUE){
+        gtk_window_close(GTK_WINDOW(window_group_chat));
+    }
    
-    
+    //---
     obj_menu_chat->signal = SIGNAL_LOGUOT;
     if(send(sockfd_menu_chat,obj_menu_chat,sizeof(Object), 0) < 0){
         perror("Can't logout");

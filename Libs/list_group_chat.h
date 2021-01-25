@@ -16,9 +16,13 @@ int sockfd_group_chat;
 int argc_group_chat;
 char *argv_group_chat;
  gboolean check_list_group = FALSE;
-
+gboolean check_create_group = FALSE;
 gboolean getCheckListGroup(){
     return check_list_group;
+}
+
+gboolean getCheckCreateGroup(){
+    return check_create_group;
 }
 
 void setCheckListGroup(){
@@ -27,6 +31,14 @@ void setCheckListGroup(){
     else
         check_list_group = FALSE;
 }
+
+void setCheckCreateGroup(){
+    if(getCheckCreateGroup() == FALSE)
+        check_create_group = TRUE;
+    else
+        check_create_group = FALSE;
+}
+
 
 int create_group_chat(int argc, char **argv);
 void on_btn_group(GtkButton *b){
@@ -109,11 +121,17 @@ int list_group_chat(int argc, char **argv,int sockfd)
 void on_list_group_chat_destroy()
 {
     setCheckListGroup();
+    
     gtk_main_quit();
+    
 }
 
 void on_btn_create_group_clicked(){
-	create_group_chat(argc_group_chat,&argv_group_chat);
+    if(getCheckCreateGroup() == FALSE){
+        setCheckCreateGroup();
+        create_group_chat(argc_group_chat,&argv_group_chat);
+    }
+	
 }
 typedef struct {
     GtkWidget *entry_name_room;
@@ -153,6 +171,7 @@ int create_group_chat(int argc, char **argv)
 void on_create_group_chat_destroy()
 {
     gtk_main_quit();
+    setCheckCreateGroup();
 }
 
 void on_btn_create_room_clicked(GtkButton *b,create_room *create){

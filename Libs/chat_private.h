@@ -14,11 +14,13 @@ typedef struct {
 	GtkWidget *scrol_list_friend;
 	//GtkLayout *layout;
 	GtkWidget *grid;
+    GtkWidget *lbl_status;
     GtkWidget *button[100];
 
 }app_widgets;
 
 //test
+Data_base_chat_private *db_list_friend_private;
 Object *obj_chat_private;
 int recv_chat;
 int sock_chat_private;
@@ -82,7 +84,18 @@ void on_btn_list_friend_private(GtkButton *button,app_widgets *widg){
     if(gtk_widget_is_sensitive(widg->chat_send) == FALSE){
         gtk_widget_set_sensitive(widg->chat_send, TRUE);
     }
+    int i;
+    for(i=0 ; i< db_list_friend_private->list_friend.length_list_friend ; i++){
+        if(db_list_friend_private->list_friend.list_friend[i].ID == atoi(gtk_widget_get_name(GTK_WIDGET(button)))){
 
+            if(db_list_friend_private->list_friend.list_friend[i].loginStatus == 1){
+                gtk_label_set_text(GTK_LABEL(widg->lbl_status),"Trang thai: Online");
+            }else{
+                gtk_label_set_text(GTK_LABEL(widg->lbl_status),"Trang thai: Offline");
+            }
+            break;
+        }
+    }
     obj_chat_private->chat_private.from_id = obj_chat_private->login.id;
     obj_chat_private->chat_private.to_id = atoi(gtk_widget_get_name(GTK_WIDGET(button)));
     obj_chat_private->signal = SIGNAL_RECV_CHAT_PRIVATE;
@@ -91,7 +104,7 @@ void on_btn_list_friend_private(GtkButton *button,app_widgets *widg){
             perror("send - chat private");
             exit(0);
         }
-     int recv_byte_ok, i;
+     int recv_byte_ok;
     recv_byte_ok = recv(sock_chat_private,db_recv_chat_private,sizeof(Data_base_chat_private),0);
          if (recv_byte_ok < 0){
             perror("recv chat private");
@@ -233,14 +246,14 @@ int chat_private(int argc, char **argv,int sockfd)
     widgets->scrol_list_friend = GTK_WIDGET(gtk_builder_get_object(builder_chat,"scrol_list_friend"));
     widgets->lbl_name_friend = GTK_WIDGET(gtk_builder_get_object(builder_chat,"lbl_name_friend"));
     widgets->grid = GTK_WIDGET(gtk_builder_get_object(builder_chat,"grid_list_friend"));
-
+    widgets->lbl_status = GTK_WIDGET(gtk_builder_get_object(builder_chat,"lbl_status"));
  
     obj_chat_private->signal = SIGNAL_RECV_LIST_FRIEND_PRIVATE;
     if(send(sock_chat_private,obj_chat_private,sizeof(Object), 0) < 0){
         perror("send - list friend");
         exit(0);
     }
-    Data_base_chat_private *db_list_friend_private = (Data_base_chat_private*)malloc(sizeof(Data_base_chat_private));
+    db_list_friend_private = (Data_base_chat_private*)malloc(sizeof(Data_base_chat_private));
 
    
         
