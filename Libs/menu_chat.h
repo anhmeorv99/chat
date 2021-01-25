@@ -3,7 +3,7 @@
 #include "change_password.h"
 
 #include "list_group_chat.h"
-#include "admin.h"
+
 
 GtkWidget       *window_menu;
 GtkWidget       *window_login;
@@ -20,6 +20,7 @@ void dup_obj_menu_chat(Object *obj){
 int menu_chat(int argc, char **argv, int sockfd)
 {
     GtkBuilder      *builder_menu; 
+    GtkWidget *btn_admin;
     argc_command = argc;
     argv_command = *argv;
     sockfd_menu_chat = sockfd;
@@ -29,6 +30,10 @@ int menu_chat(int argc, char **argv, int sockfd)
     gtk_builder_add_from_file (builder_menu, "Glade/menu_chat.glade", NULL);
 
     window_menu = GTK_WIDGET(gtk_builder_get_object(builder_menu, "menu_chat"));
+    btn_admin = GTK_WIDGET(gtk_builder_get_object(builder_menu,"btn_admin"));
+    if(obj_menu_chat->login.is_admin != 1){
+        gtk_widget_set_visible(btn_admin, FALSE);
+    }
     gtk_builder_connect_signals(builder_menu, NULL);
     //----
     //gtk_window_set_decorated(GTK_WINDOW(window_menu),FALSE);
@@ -100,7 +105,7 @@ void on_btn_change_password_clicked(){
 }
 
 void on_btn_admin_clicked(){
-    admin(argc_command,&argv_command);
+    admin(argc_command,&argv_command, sockfd_menu_chat);
 }
 
 void on_btn_logout_clicked(){

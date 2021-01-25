@@ -112,7 +112,8 @@ void on_login_btn_login_clicked(GtkButton *button, login_form *login_in){
             dup_obj_list_friend(object);
             dup_obj_menu_chat(object);
             dup_obj_chat_private(object); 
-            dup_login_list_group(object);         
+            dup_login_list_group(object);   
+            dup_obj_admin(object);      
             free_object(object); 
             //gtk_window_close(GTK_WINDOW(window_login));
             gtk_widget_set_visible(window_login,FALSE);

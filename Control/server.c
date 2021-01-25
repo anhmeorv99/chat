@@ -228,13 +228,14 @@ int main(int argc, char **argv){
                                             Elementtype *element = (Elementtype*)malloc(sizeof(Elementtype));
                                             element->sockfd = connfd;
                                             element->id = userdb.ID_user;
-                        
+
                                             root = insert_at_end(root,*element);
                                             printList(root);
                                                                                             
                                             //---------
                                             strcpy(obj->login.name, userdb.name);
                                             obj->login.id = userdb.ID_user;
+                                            obj->login.is_admin = userdb.is_admin;
                                             printf("id login: %d\n", obj->login.id);
                                             err_login = ERR_NONE;
                                             loginStatus(obj->login.username, 1);
@@ -541,6 +542,27 @@ int main(int argc, char **argv){
                         {
                             create_room_(obj->create_room.name, obj->login.id);
 
+                            break;
+                        }
+                        case SIGNAL_ADMIN:
+                        {
+                            Data_base_user *user_admin = (Data_base_user*)malloc(sizeof(Data_base_user));
+                            user_admin = getUserAdmin();
+                            user_admin->signal = DB_ADMIN;
+                            if(send(sock_cl,user_admin,sizeof(Data_base_user), 0) < 0){
+                                printf("ERROR! In socket  %d\n",sock_cl);
+                                        perror("send - admin db");
+                                        client[i] = -1;
+                                        root = delete_node(root,sock_cl);
+                                        FD_CLR(sock_cl,&masterfds);
+                                        close(sock_cl);
+                                        continue;
+                            }
+                            break;
+                        }
+                        case SIGNAL_UPDATE_ADMIN:
+                        {
+                            updateUser(obj->login.id, obj->login.password, obj->login.name);
                             break;
                         }
                         case SIGNAL_LOGUOT:

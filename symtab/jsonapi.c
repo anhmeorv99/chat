@@ -542,6 +542,7 @@ user_db getUserDB(User user){
 	strcpy(Eltype.password, json_object_get_string(user.password));
 	Eltype.is_admin = json_object_get_boolean(user.is_admin);
 	Eltype.login_status = json_object_get_boolean(user.status);
+	strcpy(Eltype.created_at, json_object_get_string(user.created_at));
 	return Eltype;
 
 }
@@ -763,7 +764,9 @@ void updateUser(int id, char* newpassword, char* name){
 	char *url= (char*)malloc(100*sizeof(char));
 	char *data = (char*)malloc(100*sizeof(char));
 	sprintf(url,"http://127.0.0.1:8000/api/user/%d/",id);
-	if (newpassword==NULL){
+
+	if (newpassword == NULL && name == NULL){
+
 		sprintf(data,"{\"status\": \"%s\"}", "false");
 	} else if (name==NULL){
 		sprintf(data,"{\"status\": \"%s\",\"password\": \"%s\"}", "false",newpassword);
@@ -792,6 +795,8 @@ void loginStatus(char* username,int status){
 
 	
 }
-int main(int argc, char **argv) {
-	updateUser(1,"123456","Daiii");
-}
+
+// int main(int argc, char **argv) {
+// 	updateUser(1,"123456","Daiii");
+// }
+

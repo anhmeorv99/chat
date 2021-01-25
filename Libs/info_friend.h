@@ -1,6 +1,6 @@
 
 #include <gtk/gtk.h>
-
+#include "admin.h"
 
 typedef struct{
     GtkWidget *info_email;
