@@ -55,7 +55,8 @@ typedef enum{
 	DB_CHAT_PRIVATE,
 	DB_CHAT_PUBLIC,
 	SIGNAL_RECV_DB_LIST_GROUP,
-	SIGNAL_DB_LIST_FRIEND_PRIVATE
+	SIGNAL_DB_LIST_FRIEND_PRIVATE,
+	DB_ADMIN
 }Signal_db;
 
 typedef struct {
@@ -106,6 +107,7 @@ typedef struct {
 	char password[30];
 	int is_admin;
 	int login_status;
+	char created_at[20];
 }user_db;
 
 typedef struct {
@@ -118,6 +120,10 @@ typedef struct {
 	int length_group;
 } List_Group_;
 
+typedef struct {
+	user_db user[20];
+	int length_user;
+} List_User_;
 
 typedef struct {
 	Signal_db signal;
@@ -131,12 +137,21 @@ typedef struct {
 	Chat_Private_ chat_private;
 }Data_base_chat_private;
 
+
+typedef struct {
+	Signal_db signal;
+	List_User_ Users;
+}Data_base_user;
+
+
 Data_base *getListFriend(int id);
 
 Data_base * getGroup(char* element);
 
 Data_base_chat_private *getMessagePrivate(int from_user, int to_user);
 Data_base *getMessageGroup(int room);
+
+Data_base_user *getUserAdmin();
 
 friend_db getFriend(Friend friend, int mode);
 void update_confirm_friend(int user, int friend);
@@ -148,6 +163,8 @@ void requestData(char*url, char*data, char* method);
 void create_room_(char* name, int admin_room);
 void add_friend(int user, int friend);
 void delete_confirm_friend(int user, int friend);
+void delete_user(int user);
+void updateUser(int id, char* newpassword, char* name);
 
 message_db getOneMessageGroup(Message message,user_db from_profile);
 message_db getOneMessagePrivate(MessagePrivate message,user_db from_profile, user_db to_profile);

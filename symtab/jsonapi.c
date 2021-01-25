@@ -273,6 +273,12 @@ void delete_confirm_friend(int user, int friend){
 
 } 
 
+void delete_user(int user){
+	char* url_delete_user = (char*)malloc(100*sizeof(char));
+	sprintf(url_delete_user, "http://127.0.0.1:8000/api/user/%d/",user);
+	requestData(url_delete_user, NULL, "DELETE");
+} 
+
 
 member_db getMember(int id){
 	member_db Eltype;
@@ -536,6 +542,7 @@ user_db getUserDB(User user){
 	strcpy(Eltype.password, json_object_get_string(user.password));
 	Eltype.is_admin = json_object_get_boolean(user.is_admin);
 	Eltype.login_status = json_object_get_boolean(user.status);
+	strcpy(Eltype.created_at, json_object_get_string(user.created_at));
 	return Eltype;
 
 }
@@ -563,6 +570,40 @@ user_db getUserDB(User user){
 
 // 		return Eltype;
 // }
+
+Data_base_user *getUserAdmin(){
+	Data_base_user *database = (Data_base_user*)malloc(sizeof(Data_base_user));
+	User item;
+	size_t length_eltype;
+	size_t i;	
+	struct json_object *parsed_json;
+	struct json_object *elementType;
+	char* url = (char*)malloc(100*sizeof(char));
+	sprintf(url, "http://127.0.0.1:8000/api/user/");
+	// get data
+	char* element = (char*)malloc(500*sizeof(char));
+	element = handle_url(url);
+	
+	parsed_json = json_tokener_parse(element);
+
+	length_eltype = json_object_array_length(parsed_json);
+	database->Users.length_user = length_eltype;
+		for(i=0;i<length_eltype;i++) {
+			elementType = json_object_array_get_idx(parsed_json, i);
+			json_object_object_get_ex(elementType, "id", &item.id);
+			json_object_object_get_ex(elementType, "name", &item.name);
+			json_object_object_get_ex(elementType, "username", &item.username);
+			json_object_object_get_ex(elementType, "password", &item.password);
+			json_object_object_get_ex(elementType, "status", &item.status);
+			json_object_object_get_ex(elementType, "created_at", &item.created_at);
+			json_object_object_get_ex(elementType, "is_admin", &item.is_admin);
+
+			database->Users.user[i] = getUserDB(item);
+	}
+	free(element);
+	return database;
+}
+
 
 int check_user(char* username){
 	size_t length_eltype;
@@ -719,6 +760,23 @@ void changePassword(int id, char* newpassword){
 	
 }
 
+void updateUser(int id, char* newpassword, char* name){
+	char *url= (char*)malloc(100*sizeof(char));
+	char *data = (char*)malloc(100*sizeof(char));
+	sprintf(url,"http://127.0.0.1:8000/api/user/%d/",id);
+	if (newpassword == NULL && name == NULL){
+		sprintf(data,"{\"status\": \"%s\"}", "false");
+	} else if (name==NULL){
+		sprintf(data,"{\"status\": \"%s\",\"password\": \"%s\"}", "false",newpassword);
+	}else
+	{
+		sprintf(data,"{\"status\": \"%s\",\"password\": \"%s\",\"name\": \"%s\"}", "false",newpassword, name);
+	}
+	
+	
+	requestData(url,data, "PATCH");
+}
+
 void loginStatus(char* username,int status){
 	user_db user = getUser(username,-1);
 	char *url= (char*)malloc(100*sizeof(char));
@@ -736,16 +794,5 @@ void loginStatus(char* username,int status){
 	
 }
 // int main(int argc, char **argv) {
-// 	// Data_base *db = (Data_base*)malloc(sizeof(Data_base));
-// 	// db = getListFriend(7);
-// 	// int i;
-// 	// printf("len = %d \n", db->list_friend.length_list_friend);
-// 	// for (i=0; i< db->list_friend.length_list_friend; i++){
-// 	// 	printf("id friend: %d \n", db->list_friend.list_friend[i].ID);
-// 	// }
-// 	int check = updateMember(8,7);
-// 	printf("check = %d", check);
-// 	// int check = check_friend(1,111);
-// 	// printf("check = %d", check);
-// 	return 1;
+// 	updateUser(1,"123456","Daiii");
 // }
