@@ -86,7 +86,7 @@ void recv_chat_group(void *app){
                         markup_message = g_markup_printf_escaped(format_invalid,err_msg);
                         gtk_label_set_markup(GTK_LABEL(widg->lbl_err_username),markup_message);
                         gtk_widget_set_visible(widg->lbl_err_username, TRUE);
-                        g_free(markup_message);
+                        // g_free(markup_message);
                                 
                     
                     }else{
@@ -95,7 +95,7 @@ void recv_chat_group(void *app){
                         markup_message = g_markup_printf_escaped(format_error,msg_con);
                         gtk_label_set_markup(GTK_LABEL(widg->lbl_err_username),markup_message);
                         gtk_widget_set_visible(widg->lbl_err_username, TRUE);
-                        g_free(markup_message);
+                        // g_free(markup_message);
                     }
                 }
                 //chat room
