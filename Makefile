@@ -31,8 +31,8 @@ OBJ_ERROR_INVALID_PATH = symtab/error_invalid.c
 OBJ_JSONAPI = jsonapi.o
 OBJ_JSONAPI_PATH = symtab/jsonapi.c
 
-all: $(OBJS) $(OBJ_DATA) $(OBJ_ERROR_INVALID) server
-	$(LD)  $(OBJS) $(OBJ_DATA) $(OBJ_ERROR_INVALID)  $(LDFLAGS) -o $(TARGET)
+all: $(OBJS) $(OBJ_DATA) $(OBJ_ERROR_INVALID) $(OBJ_JSONAPI) server
+	$(LD)  $(OBJS) $(OBJ_DATA) $(OBJ_ERROR_INVALID) $(OBJ_JSONAPI)  $(LDFLAGS) -o $(TARGET) -ljson-c -lcurl
 
 server: $(OBJ_SERVER) $(OBJ_DATA) $(OBJ_ERROR_INVALID) $(OBJ_JSONAPI)
 	$(CC) $(OBJ_SERVER) $(OBJ_DATA) $(OBJ_ERROR_INVALID) $(OBJ_JSONAPI) -o server -ljson-c -lcurl

@@ -93,12 +93,6 @@ void on_btn_update_admin(GtkButton *b, admin_user *ad){
 }
 
 
-
-void on_btn_update_admin(GtkButton *b, admin_user *ad){
-    gtk_widget_set_sensitive(window_admin,FALSE);
-    update_admin_user(argc_admin,&argv_admin,atoi(gtk_widget_get_name(GTK_WIDGET(b))));
-}
-
 int admin(int argc, char **argv,int sock)
 {
     GtkBuilder      *builder_admin; 

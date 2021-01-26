@@ -143,6 +143,8 @@ typedef struct {
 	List_User_ Users;
 }Data_base_user;
 
+// HOST
+
 
 Data_base *getListFriend(int id);
 
