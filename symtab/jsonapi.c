@@ -1,6 +1,8 @@
 #include "jsonapi.h"
 #include <curl/curl.h>
 
+char host[] = "http://192.168.1.251:8000";
+
 
 size_t write_data(void *ptr, size_t size, size_t nmemb, struct url_data *data) {
     size_t index = data->size;
@@ -70,8 +72,8 @@ Data_base *getListFriend(int id){
 	size_t i;	
 	char* url = (char*)malloc(200*sizeof(char));
 	char* url1 = (char*)malloc(200*sizeof(char));
-    sprintf(url, "http://127.0.0.1:8000/api/friends/?user=%d", id);
-    sprintf(url1, "http://127.0.0.1:8000/api/friends/?friend=%d", id);
+    sprintf(url, "%s/api/friends/?user=%d",host, id);
+    sprintf(url1, "%s/api/friends/?friend=%d",host, id);
 
 	// friend_db friend_;
 	struct json_object *parsed_json, *parsed_json1;
@@ -168,7 +170,10 @@ void requestData(char*url, char*data, char* method){
 void create_room_(char* name, int admin_room){
 	char* data = (char*)malloc(100*sizeof(char));
 	sprintf(data, "{\"name\": \"%s\", \"member\": [%d], \"admin_room\" : %d}", name, admin_room, admin_room);
-	char url[] = "http://127.0.0.1:8000/api/room/";
+	char *url = (char*)malloc(100*sizeof(char));
+	sprintf(url,"%s/api/room/", host );
+	
+
 	// printf("%s\n", data);
 	requestData(url, data, "POST");
 }
@@ -179,8 +184,8 @@ int check_friend(int id_user, int id_friend){
 	char* url1 = (char*)malloc(100*sizeof(char));
 	char* buffer = (char*)malloc(100*sizeof(char));
 	char* buffer1 = (char*)malloc(100*sizeof(char));
-	sprintf(url, "http://127.0.0.1:8000/api/friends/?user=%d&friend=%d",id_user, id_friend);
-	sprintf(url1, "http://127.0.0.1:8000/api/friends/?user=%d&friend=%d",id_friend, id_user);
+	sprintf(url, "%s/api/friends/?user=%d&friend=%d",host,id_user, id_friend);
+	sprintf(url1, "%s/api/friends/?user=%d&friend=%d",host, id_friend, id_user);
 	buffer = handle_url(url);
 	buffer1 = handle_url(url1);
 	int length_eltype,i;
@@ -225,7 +230,7 @@ void update_confirm_friend(int user, int friend){
 	char data[] = "{\"confirm\": true}";
 	int i, length_eltype;
 
-	sprintf(url_user, "http://127.0.0.1:8000/api/friends/?user=%d&friend=%d",friend,user);
+	sprintf(url_user, "%s/api/friends/?user=%d&friend=%d",host, friend,user);
 	buffer_user = handle_url(url_user);
 	struct json_object *parsed_json;
 	struct json_object *elementType;
@@ -238,7 +243,7 @@ void update_confirm_friend(int user, int friend){
 			json_object_object_get_ex(elementType, "id", &item_user.id);
 			}	
 		}
-		sprintf(url_update_user, "http://127.0.0.1:8000/api/friends/%d/",json_object_get_int(item_user.id));
+		sprintf(url_update_user, "%s/api/friends/%d/",host, json_object_get_int(item_user.id));
 	}		
 	requestData(url_update_user,data, "PATCH");
 
@@ -254,7 +259,7 @@ void delete_confirm_friend(int user, int friend){
 
 	int i, length_eltype;
 
-	sprintf(url_user, "http://127.0.0.1:8000/api/friends/?user=%d&friend=%d",friend,user);
+	sprintf(url_user, "%s/api/friends/?user=%d&friend=%d",host, friend,user);
 	buffer_user = handle_url(url_user);
 	struct json_object *parsed_json;
 	struct json_object *elementType;
@@ -267,7 +272,7 @@ void delete_confirm_friend(int user, int friend){
 			json_object_object_get_ex(elementType, "id", &item_user.id);
 			}	
 		}
-		sprintf(url_update_user, "http://127.0.0.1:8000/api/friends/%d/",json_object_get_int(item_user.id));
+		sprintf(url_update_user, "%s/api/friends/%d/",host, json_object_get_int(item_user.id));
 	}		
 	requestData(url_update_user, NULL, "DELETE");
 
@@ -275,7 +280,7 @@ void delete_confirm_friend(int user, int friend){
 
 void delete_user(int user){
 	char* url_delete_user = (char*)malloc(100*sizeof(char));
-	sprintf(url_delete_user, "http://127.0.0.1:8000/api/user/%d/",user);
+	sprintf(url_delete_user, "%s/api/user/%d/",host, user);
 	requestData(url_delete_user, NULL, "DELETE");
 } 
 
@@ -307,7 +312,7 @@ Data_base *getMessageGroup(int room){
 	struct json_object *elementType;
 	user_db profile;
 	char* url = (char*)malloc(100*sizeof(char));
-	sprintf(url, "http://127.0.0.1:8000/api/message/?room_id=%d", room);
+	sprintf(url, "%s/api/message/?room_id=%d",host, room);
 	
 	char* element = (char*)malloc(100*sizeof(char));
 	element = handle_url(url);
@@ -354,7 +359,7 @@ Data_base_chat_private *getMessagePrivate(int from_user, int to_user)
 	profile = getUser(NULL, from_user);
 	profile_recv = getUser(NULL, to_user);
 	char* url = (char*)malloc(100*sizeof(char));
-	sprintf(url, "http://127.0.0.1:8000/api/private/?from_user=%d&to_user=%d", from_user, to_user);
+	sprintf(url, "%s/api/private/?from_user=%d&to_user=%d",host, from_user, to_user);
 	// get data
 	char* element = (char*)malloc(500*sizeof(char));
 	char* len_str = (char*)malloc(4*sizeof(char));
@@ -392,71 +397,28 @@ char *convert_struct_to_json_message(int from_user, char* message, int room){
 }
 
 void postMessageGroup(int from_user,char* message, int room){
-     CURL *curl;
-     CURLcode res;
 	char* data = convert_struct_to_json_message(from_user,message,room);
-  /* In windows, this will init the winsock stuff */ 
-  curl_global_init(CURL_GLOBAL_ALL);
- 
-  /* get a curl handle */ 
-  curl = curl_easy_init();
-  if(curl) {
-    struct curl_slist *chunk = NULL; 
-    chunk = curl_slist_append(chunk, "Content-Type: application/json");
-    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, chunk);
-    
-    curl_easy_setopt(curl, CURLOPT_URL, "http://127.0.0.1:8000/api/message/");
-    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data);
-    res = curl_easy_perform(curl);
-    if(res != CURLE_OK)
-      fprintf(stderr, "curl_easy_perform() failed: %s\n",
-              curl_easy_strerror(res));
-    curl_easy_cleanup(curl);
-  }
-  curl_global_cleanup();
+	char* url = (char*)malloc(100*sizeof(char));
+	sprintf(url, "%s/api/message/",host);
+	requestData(url,data,"POST");
 }
 
 
 void add_friend(int user, int friend){
 	char* data = (char*)malloc(100*sizeof(char));
 	sprintf(data,"{\"user\": %d, \"friend\": %d, \"confirm\": false}",user, friend);
-	requestData("http://127.0.0.1:8000/api/friends/",data, "POST");
+	char* url = (char*)malloc(100*sizeof(char));
+	sprintf(url, "%s/api/friends/",host);
+	requestData(url,data, "POST");
 }
 
 void postMessage(int from_user, int to_user, char* message){
-     CURL *curl;
-     CURLcode res;
 	char* data = (char*)malloc(200*sizeof(char));
-	sprintf(data,"{\"from_user\":%d, \"message\": \"%s\", \"to_user\":%d}",
-	 from_user,message,to_user);
-  /* In windows, this will init the winsock stuff */ 
-  curl_global_init(CURL_GLOBAL_ALL);
- 
-  /* get a curl handle */ 
-  curl = curl_easy_init();
-  if(curl) {
-    struct curl_slist *chunk = NULL; 
-    chunk = curl_slist_append(chunk, "Content-Type: application/json");
-    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, chunk);
-    
-    curl_easy_setopt(curl, CURLOPT_URL, "http://127.0.0.1:8000/api/private/");
-    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data);
-    res = curl_easy_perform(curl);
-    if(res != CURLE_OK)
-      fprintf(stderr, "curl_easy_perform() failed: %s\n",
-              curl_easy_strerror(res));
-    curl_easy_cleanup(curl);
-  }
-  curl_global_cleanup();
+	sprintf(data,"{\"from_user\":%d, \"message\": \"%s\", \"to_user\":%d}",from_user,message,to_user);
+	char* url = (char*)malloc(100*sizeof(char));
+	sprintf(url, "%s/api/private/",host);
+	requestData(url,data,"POST");
 }
-
-
-// Chat_Private_ getChatPrivate(message_db message,int index){
-// 	Chat_Private_ Eltype;
-// 	// Eltype.ID = message.ID;
-// 	Eltype.msg_private[index] = message;
-// 	return Eltype;
-// }
 
 
 int get_id_room_private(char* username1, char* username2){
@@ -468,7 +430,7 @@ int get_id_room_private(char* username1, char* username2){
 	Room item;
 	char * url = (char*)malloc(100*sizeof(char));
 	char * buffer = (char*)malloc(100*sizeof(char));
-	sprintf(url, "http://127.0.0.1:8000/api/room/?room_status=1&member=%d,%d", id_user1.ID_user,id_user2.ID_user);
+	sprintf(url, "%s/api/room/?room_status=1&member=%d,%d",host, id_user1.ID_user,id_user2.ID_user);
 	buffer = handle_url(url);
 	if (buffer){
 
@@ -547,30 +509,6 @@ user_db getUserDB(User user){
 
 }
 
-// Data_base getDatabase(user_db user, friend_db *friend, int len_friend, Chat_Private_ *chat_private, 
-// 						int len_chat_private, group_db *group, int len_group){
-		
-// 		Data_base Eltype;
-// 		int i;
-// 		Eltype.signal = DB_NONE;
-// 		Eltype.user = user;
-// 		for (i=0;i < len_friend;i++){
-// 			Eltype.list_friend[i] = friend[i];
-// 		}
-// 		for (i=0;i < len_chat_private;i++){
-// 			Eltype.chat_private[i] = chat_private[i];
-// 		}
-// 		for (i=0;i < len_group;i++){
-// 			Eltype.group[i] = group[i];
-// 		}
-
-// 		Eltype.length_list_friend = len_friend;
-// 		Eltype.length_chat_private = len_chat_private;
-// 		Eltype.length_group = len_group;
-
-// 		return Eltype;
-// }
-
 Data_base_user *getUserAdmin(){
 	Data_base_user *database = (Data_base_user*)malloc(sizeof(Data_base_user));
 	User item;
@@ -579,7 +517,7 @@ Data_base_user *getUserAdmin(){
 	struct json_object *parsed_json;
 	struct json_object *elementType;
 	char* url = (char*)malloc(100*sizeof(char));
-	sprintf(url, "http://127.0.0.1:8000/api/user/");
+	sprintf(url, "%s/api/user/",host);
 	// get data
 	char* element = (char*)malloc(500*sizeof(char));
 	element = handle_url(url);
@@ -609,8 +547,8 @@ int check_user(char* username){
 	size_t length_eltype;
 	struct json_object *parsed_json;
 	char *buffer;
-	char url[]= "http://127.0.0.1:8000/api/user/?username=";
-	strcat(url,username);
+	char *url = (char*)malloc(100*sizeof(char)); 
+	sprintf(url,"%s/api/user/?username=%s",host, username);
  	buffer = handle_url(url);
 
     if(buffer) {
@@ -633,7 +571,7 @@ int updateMember(int room, int member){
 	char *data = (char*)malloc(100*sizeof(char));
 
 	int j, length_member;
-	sprintf(url, "http://127.0.0.1:8000/api/room/%d/", room);
+	sprintf(url, "%s/api/room/%d/",host, room);
 	buffer = handle_url(url);
 	struct json_object *parsed_json;
 	struct json_object *elementType, *id_member;
@@ -657,7 +595,7 @@ int updateMember(int room, int member){
 						if (json_object_get_int(id_member) == member) return 3; // id ton tai
 			}	
 		
-		sprintf(data, "http://127.0.0.1:8000/api/room/%d/?add_member=%d&room=%d", room, member, room);
+		sprintf(data, "%s/api/room/%d/?add_member=%d&room=%d",host, room, member, room);
 		requestData(data, NULL, "PATCH");
 		return 1;
 	}
@@ -675,7 +613,7 @@ user_db getUser(char* username, int id){
 	struct json_object *parsed_json;
 	struct json_object *elementType;
 	if (id == -1){
-		sprintf(url,"http://127.0.0.1:8000/api/user/?username=%s",username);
+		sprintf(url,"%s/api/user/?username=%s",host,username);
 		buffer = handle_url(url);
 	if(buffer) {
 	parsed_json = json_tokener_parse(buffer);
@@ -698,7 +636,7 @@ user_db getUser(char* username, int id){
 	}
 	else
 	{
-		sprintf(url,"http://127.0.0.1:8000/api/user/%d/",id);
+		sprintf(url,"%s/api/user/%d/",host,id);
 		buffer = handle_url(url);
 		if(buffer) {
 		parsed_json = json_tokener_parse(buffer);
@@ -718,35 +656,13 @@ user_db getUser(char* username, int id){
 }
 
 void postUser(user_db user){
-  CURL *curl;
-  CURLcode res;
- 
-  /* In windows, this will init the winsock stuff */ 
-  curl_global_init(CURL_GLOBAL_ALL);
- 
-  /* get a curl handle */ 
-  curl = curl_easy_init();
-  if(curl) {
-    /* First set the URL that is about to receive our POST. This URL can
-       just as well be a https:// URL if that is what should receive the
-       data. */ 
-    curl_easy_setopt(curl, CURLOPT_URL, "http://127.0.0.1:8000/api/user/");
-    /* Now specify the POST data */ 
+  
 	char *data = (char*)malloc(200*sizeof(char)); 
+	char *url = (char*)malloc(100*sizeof(char));
+	sprintf(url,"%s/api/user/",host);
 	sprintf(data,"name=%s&username=%s&password=%s",user.name, user.username, user.password);
-    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data);
+	requestData(url, data, "POST");
  
-    /* Perform the request, res will get the return code */ 
-    res = curl_easy_perform(curl);
-    /* Check for errors */ 
-    if(res != CURLE_OK)
-      fprintf(stderr, "curl_easy_perform() failed: %s\n",
-              curl_easy_strerror(res));
- 
-    /* always cleanup */ 
-    curl_easy_cleanup(curl);
-  }
-  curl_global_cleanup();
 }
 
 
@@ -754,7 +670,7 @@ void changePassword(int id, char* newpassword){
 	
 	char *url= (char*)malloc(100*sizeof(char));
 	char *data = (char*)malloc(100*sizeof(char));
-	sprintf(url,"http://127.0.0.1:8000/api/user/%d/",id);
+	sprintf(url,"%s/api/user/%d/",host, id);
 	sprintf(data,"{\"password\": \"%s\"}", newpassword);
 	requestData(url,data, "PATCH");
 	
@@ -763,7 +679,7 @@ void changePassword(int id, char* newpassword){
 void updateUser(int id, char* newpassword, char* name){
 	char *url= (char*)malloc(100*sizeof(char));
 	char *data = (char*)malloc(100*sizeof(char));
-	sprintf(url,"http://127.0.0.1:8000/api/user/%d/",id);
+	sprintf(url,"%s/api/user/%d/",host, id);
 
 	if (newpassword == NULL && name == NULL){
 
@@ -782,7 +698,7 @@ void updateUser(int id, char* newpassword, char* name){
 void loginStatus(char* username,int status){
 	user_db user = getUser(username,-1);
 	char *url= (char*)malloc(100*sizeof(char));
-	sprintf(url,"http://127.0.0.1:8000/api/user/%d/", user.ID_user);
+	sprintf(url,"%s/api/user/%d/",host, user.ID_user);
 	char *data = (char*)malloc(100*sizeof(char));
 	if (status == 1){
 		sprintf(data,"{\"status\": true}");
@@ -796,13 +712,6 @@ void loginStatus(char* username,int status){
 	
 }
 
-// int main(int argc, char **argv) {
-// 	updateUser(1,"123456","Daiii");
-// }
-=======
 
-// int main(int argc, char **argv) {
-// 	updateUser(1,"123456","Daiii");
-// }
 
 

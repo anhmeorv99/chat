@@ -77,6 +77,8 @@ void printList(Node *root){
 //
 int checkNumber(char* str);
 
+char host1[] = "http://192.168.1.251:8000";
+
 int main(int argc, char **argv){
 
     int sockfd, connfd, port, recvBytes;
@@ -127,7 +129,8 @@ int main(int argc, char **argv){
         perror("Error: listen!");
         return 0;
     }
-    char check_url[] ="http://127.0.0.1:8000/api/user";
+    char *check_url = (char*)malloc(100*sizeof(char));
+    sprintf(check_url, "%s/api/user", host1);
     char * buff_check_server = (char*)malloc(100*sizeof(char));
     FD_ZERO(&masterfds);
     FD_ZERO(&readfds);
@@ -367,6 +370,7 @@ int main(int argc, char **argv){
                             // profile_recv = getUser(obj->chat_private.to_username, -1);
                             // sleep(0.3); 
                             db_chat_private = getMessagePrivate(obj->chat_private.from_id, obj->chat_private.to_id);
+                           
                             db_chat_private->signal = SIGNAL_DB_CHAT_PRIVATE;
                             if(send(sock_cl,db_chat_private, sizeof(Data_base), 0) < 0){
                                 printf("ERROR! In socket %d\n",sock_cl);
@@ -467,7 +471,7 @@ int main(int argc, char **argv){
                             char* buffer = (char*)malloc(200*sizeof(char));
                             char* url = (char*)malloc(100*sizeof(char));
                             // int i,j;
-                            sprintf(url,"http://127.0.0.1:8000/api/room/?user=%d", obj->login.id);
+                            sprintf(url,"%s/api/room/?user=%d",host1, obj->login.id);
                             buffer = handle_url(url);
                             if (buffer){
                                 db = getGroup(buffer);

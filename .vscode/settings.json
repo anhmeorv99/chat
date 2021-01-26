@@ -2,6 +2,7 @@
     "files.associations": {
         "typeinfo": "c",
         "type_traits": "cpp",
-        "*.tcc": "cpp"
+        "*.tcc": "cpp",
+        "limits": "cpp"
     }
 }
