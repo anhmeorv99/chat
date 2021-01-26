@@ -77,7 +77,7 @@ void printList(Node *root){
 //
 int checkNumber(char* str);
 
-char host1[] = "http://192.168.1.251:8000";
+char host1[] = "http://192.168.43.215:8000";
 
 int main(int argc, char **argv){
 

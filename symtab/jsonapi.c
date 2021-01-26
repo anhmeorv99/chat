@@ -1,7 +1,7 @@
 #include "jsonapi.h"
 #include <curl/curl.h>
 
-char host[] = "http://192.168.1.251:8000";
+char host[] = "http://192.168.43.215:8000";
 
 
 size_t write_data(void *ptr, size_t size, size_t nmemb, struct url_data *data) {
