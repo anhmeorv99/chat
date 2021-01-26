@@ -51,7 +51,7 @@ void on_menu_chat_destroy()
 {
     if(getCheckChatPrivate() == TRUE){
         gtk_window_close(GTK_WINDOW(window_chat));
-      
+ 
     }
     
     
@@ -68,7 +68,17 @@ void on_menu_chat_destroy()
     
     if(getCheckAdmin() == TRUE){
         gtk_window_close(GTK_WINDOW(window_admin));
-        
+
+    }
+    if(getCheckCreateGroup() == TRUE){
+        gtk_window_close(GTK_WINDOW(window_create_group_chat));
+    }
+    if(getCheckChatGroup() == TRUE){
+        gtk_window_close(GTK_WINDOW(window_chat_group));
+    }
+    if(getCheckListGroup() == TRUE){
+        gtk_window_close(GTK_WINDOW(window_group_chat));
+
     }
    
     //---
@@ -116,11 +126,13 @@ void on_btn_change_password_clicked(){
 }
 
 void on_btn_admin_clicked(){
+
     if(getCheckAdmin() ==FALSE){
         setCheckAdmin();
         admin(argc_command,&argv_command, sockfd_menu_chat);
     }
     
+
 }
 
 void on_btn_logout_clicked(){

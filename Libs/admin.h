@@ -41,6 +41,7 @@ int id_update_user;
 admin_user *ad;
 Data_base_user *user;
 
+
 gboolean check_admin = FALSE;
 gboolean check_update_admin = FALSE;
 
@@ -66,6 +67,7 @@ void setCheckUpdateAdmin(){
         check_update_admin = FALSE;
 }
 
+
 void dup_obj_admin(Object *obj){
     obj_admin = duplicate_object(obj);
 }
@@ -80,6 +82,7 @@ char * convert_timestamp_to_date_admin(char* timestamp){
     return buf;
 }
 
+
 void on_btn_update_admin(GtkButton *b, admin_user *ad){
     // gtk_widget_set_sensitive(window_admin,FALSE);
     if(getCheckUpdateAdmin()== FALSE){
@@ -87,6 +90,13 @@ void on_btn_update_admin(GtkButton *b, admin_user *ad){
         update_admin_user(argc_admin,&argv_admin,atoi(gtk_widget_get_name(GTK_WIDGET(b))));
     }
     
+}
+
+
+
+void on_btn_update_admin(GtkButton *b, admin_user *ad){
+    gtk_widget_set_sensitive(window_admin,FALSE);
+    update_admin_user(argc_admin,&argv_admin,atoi(gtk_widget_get_name(GTK_WIDGET(b))));
 }
 
 int admin(int argc, char **argv,int sock)
@@ -309,7 +319,9 @@ int update_admin_user(int argc, char **argv,int id){
 }
 
 void on_window_update_admin_destroy(){
+
     setCheckUpdateAdmin();
+
     gtk_main_quit();
     gtk_widget_set_sensitive(window_admin,TRUE);
 }
