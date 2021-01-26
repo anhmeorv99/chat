@@ -1,5 +1,5 @@
 #include <gtk/gtk.h>
-#include "../symtab/jsonapi.h"
+
 #include "info_friend.h"
 
 typedef struct {

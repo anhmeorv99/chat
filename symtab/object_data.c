@@ -40,6 +40,7 @@ Object *duplicate_object(Object *obj){
 		case SIGNAL_LOGIN:
 			new->signal = obj->signal;
 			new->login.id = obj->login.id;
+			new->login.is_admin = obj->login.is_admin;
 			strcpy(new->login.name,obj->login.name);
 			strcpy(new->login.username,obj->login.username);
 			strcpy(new->login.password,obj->login.password);
@@ -112,8 +113,13 @@ Object *duplicate_object(Object *obj){
 		case SIGNAL_RECV_CHAT_PRIVATE:
 			new->signal = obj->signal;
 			break;
-		
+		case SIGNAL_ADMIN:
+			new->signal = obj->signal;
+			break;
 		case SIGNAL_RECV_LIST_GROUP:
+			new->signal = obj->signal;
+			break;
+		case SIGNAL_UPDATE_ADMIN:
 			new->signal = obj->signal;
 			break;
 		case SIGNAL_NONE:

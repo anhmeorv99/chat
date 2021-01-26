@@ -15,6 +15,7 @@ typedef struct {
 Data_base *db_list_group;
 Object *obj_list_group;
 int sockfd_chat_group;
+GtkWidget       *window_chat_group;
 int id_room;
 gboolean check_chat_group = FALSE;
 
@@ -51,7 +52,7 @@ void recv_chat_group(void *app){
                 perror("recv - chat group");
                 exit(0);
             };
-            printf("signal: %d\n",obj->signal);
+            // printf("signal: %d\n",obj->signal);
                 //add member
                 if(obj->signal == SIGNAL_RECV_ADD_MEMBER){
                    
@@ -124,7 +125,7 @@ int chat_group(int argc, char **argv,int sockfd,int id)
 {
     int i;
     GtkBuilder      *builder_chat_group; 
-    GtkWidget       *window_chat_group;
+    
 
     w_chat_group *chat_group_ = g_slice_new(w_chat_group);
     id_room = id;

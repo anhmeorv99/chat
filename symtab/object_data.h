@@ -17,12 +17,14 @@ typedef enum {
 	SIGNAL_CHANGE_PASSWORD,
 	SIGNAL_CREATE_ROOM,
 	SIGNAL_RECV_ADD_MEMBER,
-	//SIGNAL_ADMIN,
+	SIGNAL_ADMIN,
+	SIGNAL_UPDATE_ADMIN,
 	SIGNAL_LOGUOT
 }Signals;
 
 typedef struct {
 	int id;
+	int is_admin;
 	char username[30];
 	char name[30];
 	char password[30];
