@@ -120,6 +120,16 @@ int list_group_chat(int argc, char **argv,int sockfd)
 // called when window is closed
 void on_list_group_chat_destroy()
 {
+    if(getCheckChatGroup() == TRUE){
+        gtk_window_close(GTK_WINDOW(window_chat_group));
+      
+    }
+
+    if(getCheckCreateGroup() == TRUE){
+        gtk_window_close(GTK_WINDOW(window_create_group_chat));
+       
+    }
+
     setCheckListGroup();
     
     gtk_main_quit();

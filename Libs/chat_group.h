@@ -52,7 +52,7 @@ void recv_chat_group(void *app){
                 perror("recv - chat group");
                 exit(0);
             };
-            printf("signal: %d\n",obj->signal);
+            // printf("signal: %d\n",obj->signal);
                 //add member
                 if(obj->signal == SIGNAL_RECV_ADD_MEMBER){
                    

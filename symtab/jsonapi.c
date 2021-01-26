@@ -799,4 +799,10 @@ void loginStatus(char* username,int status){
 // int main(int argc, char **argv) {
 // 	updateUser(1,"123456","Daiii");
 // }
+=======
+
+// int main(int argc, char **argv) {
+// 	updateUser(1,"123456","Daiii");
+// }
+
 

@@ -40,6 +40,34 @@ Object *obj_admin;
 int id_update_user;
 admin_user *ad;
 Data_base_user *user;
+
+
+gboolean check_admin = FALSE;
+gboolean check_update_admin = FALSE;
+
+gboolean getCheckAdmin(){
+    return check_admin;
+}
+
+gboolean getCheckUpdateAdmin(){
+    return check_update_admin;
+}
+
+void setCheckAdmin(){
+    if(getCheckAdmin() == FALSE)
+        check_admin = TRUE;
+    else
+        check_admin = FALSE;
+}
+
+void setCheckUpdateAdmin(){
+    if(getCheckUpdateAdmin() == FALSE)
+        check_update_admin = TRUE;
+    else
+        check_update_admin = FALSE;
+}
+
+
 void dup_obj_admin(Object *obj){
     obj_admin = duplicate_object(obj);
 }
@@ -53,6 +81,18 @@ char * convert_timestamp_to_date_admin(char* timestamp){
     strftime(buf, 100*sizeof(buf), "%Y-%m-%d %H:%M:%S", &ts);
     return buf;
 }
+
+
+void on_btn_update_admin(GtkButton *b, admin_user *ad){
+    // gtk_widget_set_sensitive(window_admin,FALSE);
+    if(getCheckUpdateAdmin()== FALSE){
+        setCheckUpdateAdmin();
+        update_admin_user(argc_admin,&argv_admin,atoi(gtk_widget_get_name(GTK_WIDGET(b))));
+    }
+    
+}
+
+
 
 void on_btn_update_admin(GtkButton *b, admin_user *ad){
     gtk_widget_set_sensitive(window_admin,FALSE);
@@ -217,6 +257,11 @@ int admin(int argc, char **argv,int sock)
 // called when window is closed
 void on_window_admin_destroy()
 {
+    if(getCheckUpdateAdmin() == TRUE){
+        gtk_window_close(GTK_WINDOW(window_update_admin));
+        
+    }
+    setCheckAdmin();
     gtk_main_quit();
     //gtk_widget_set_visible(window,TRUE);
 }
@@ -274,6 +319,9 @@ int update_admin_user(int argc, char **argv,int id){
 }
 
 void on_window_update_admin_destroy(){
+
+    setCheckUpdateAdmin();
+
     gtk_main_quit();
     gtk_widget_set_sensitive(window_admin,TRUE);
 }
