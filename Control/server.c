@@ -229,7 +229,7 @@ int main(int argc, char **argv){
                                         if(userdb.login_status == 0){
                                             //----them node computer----
                                             Elementtype *element = (Elementtype*)malloc(sizeof(Elementtype));
-                                            element->sockfd = connfd;
+                                            element->sockfd = sock_cl;
                                             element->id = userdb.ID_user;
 
                                             root = insert_at_end(root,*element);
@@ -540,6 +540,7 @@ int main(int argc, char **argv){
                         case SIGNAL_NO_CONFIRM_FRIEND:
                         {
                             delete_confirm_friend(obj->login.id, obj->add_member.ID);
+                            delete_confirm_friend(obj->add_member.ID, obj->login.id);
                             break;
                         }
                         case SIGNAL_CREATE_ROOM:
