@@ -3,7 +3,6 @@
 
 char host[] = "http://192.168.1.251:8000";
 
-
 size_t write_data(void *ptr, size_t size, size_t nmemb, struct url_data *data) {
     size_t index = data->size;
     size_t n = (size * nmemb);
