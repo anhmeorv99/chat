@@ -659,7 +659,7 @@ void postUser(user_db user){
 	char *data = (char*)malloc(200*sizeof(char)); 
 	char *url = (char*)malloc(100*sizeof(char));
 	sprintf(url,"%s/api/user/",host);
-	sprintf(data,"name=%s&username=%s&password=%s",user.name, user.username, user.password);
+	sprintf(data,"{\"name\":\"%s\",\"username\":\"%s\",\"password\":\"%s\"}",user.name, user.username, user.password);
 	requestData(url, data, "POST");
  
 }

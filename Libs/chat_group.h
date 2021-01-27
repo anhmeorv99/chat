@@ -73,7 +73,7 @@ void recv_chat_group(void *app){
                                 printf("log 3\n");
                                 gtk_grid_attach(GTK_GRID(widg->grid_member),widg->btn_member[len],1,len,1,1);
                                  printf("log 4\n");
-                                gtk_widget_show_all(widg->scrol_member);
+                                // gtk_widget_show_all(widg->scrol_member);
                                  printf("log 5\n");
                                 db_list_group->list_group.group[i].length_member++;
 
